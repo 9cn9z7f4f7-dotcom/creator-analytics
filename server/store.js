@@ -168,6 +168,11 @@ const CREATORS = [
 // чтобы таблица у админа и лидерборды выглядели естественно.
 CREATORS.forEach((c) => {
   c.name = c.n === '@marsedzhan' ? null : suggestNameFromNick(c.n);
+  // Почта креатора — нигде в системе не собирается (не при регистрации, не
+  // в брифе), но нужна дальше по процессу выплаты (см. buildPayoutTemplate
+  // ниже). Слот под неё: null, пока админ не впишет её один раз в шаблоне
+  // выплаты — дальше подставляется сама на все будущие шаблоны этого креатора.
+  c.email = null;
 });
 
 const LVN = { 1: 'Новичок', 2: 'Активный', 3: 'Профи', 4: 'Топ' };
@@ -434,8 +439,11 @@ function recomputeContests() {
 // делается вручную (см. README), но админу теперь не нужно самому собирать
 // эти данные по разным вкладкам: ролики этой заявки уже помечены полем
 // wd = id заявки, отсюда и период, и разбивка по проектам.
-// Email креатора в системе не хранится нигде (ни в CREATORS, ни в PAYQ) —
-// это отдельный вопрос, шаблон его не выдумывает, только ник и ID эдуграм.
+// Почта креатора нигде в системе не собирается (не при регистрации, не в
+// брифе) — шаблон её не выдумывает, только подставляет, если админ уже
+// вписал её один раз (см. CREATORS.email и PATCH /creators/:nick/email).
+// Пока не вписана — в idLine оставлена явная метка-слот, а не молчаливый
+// пропуск, чтобы было видно, что поле есть, но пусто.
 // ---------------------------------------------------------------------------
 function buildPayoutTemplate(x) {
   const videos = VIDEOS.filter((v) => v.wd === x.id);
@@ -450,8 +458,11 @@ function buildPayoutTemplate(x) {
     byOffer[key] = (byOffer[key] || 0) + pay(v.v, RATE[key] * levelMultForNick(x.c), v.k);
   });
   const fmtDate = (t) => (t == null ? '—' : new Date(t).toLocaleDateString('ru-RU'));
+  const creator = CREATORS.find((c) => c.n === x.c);
+  const email = (creator && creator.email) || null;
   return {
-    idLine: x.c + ' · ID эдуграм ' + x.eid,
+    idLine: x.c + ' · ID эдуграм ' + x.eid + ' · ' + (email || 'email не указан'),
+    email,
     period: 'с ' + fmtDate(minTs) + ' по ' + fmtDate(maxTs),
     projects: Object.keys(byOffer).map((of) => of + ' — ' + byOffer[of].toLocaleString('ru-RU') + ' ₽'),
     total: x.s.toLocaleString('ru-RU') + ' ₽',
