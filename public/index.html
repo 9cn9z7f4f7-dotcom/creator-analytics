@@ -1116,8 +1116,8 @@
 
     <h2>Мои инструменты<span class="qm" onclick="qq(event,'tools')">?</span></h2>
     <div class="box"><div class="bp">
-      <div class="row"><label>Ссылка</label><input readonly id="cRef" value="https://studyai.ru/?ref=629398"><button class="btn" onclick="t('Скопировано')"><i class="ti ti-copy"></i></button></div>
-      <div class="row"><label>Промокод</label><input readonly id="cPromo" value="MARS10"><button class="btn" onclick="t('Скопировано')"><i class="ti ti-copy"></i></button></div>
+      <div class="row"><label>Ссылка</label><input readonly id="cRef" value="https://studyai.ru/?ref=629398"><button class="btn" onclick="copyField('cRef')"><i class="ti ti-copy"></i></button></div>
+      <div class="row"><label>Промокод</label><input readonly id="cPromo" value="MARS10"><button class="btn" onclick="copyField('cPromo')"><i class="ti ti-copy"></i></button></div>
       <div class="row" id="balRow"><label>Баланс</label>
         <span id="cBal" style="flex:1;font-size:15px;font-weight:600;color:var(--green);">15 053 ₽</span>
         <a class="btn" href="https://sreda.ru/withdraw" target="_blank" title="Страница вывода в SREDA"><i class="ti ti-external-link"></i></a>
@@ -1227,7 +1227,7 @@
     </div>
 
     <div class="box"><div class="bp">
-      <div class="row"><label>Ссылка скаута</label><input readonly id="scoutLink" value=""><button class="btn" onclick="t('Скопировано')"><i class="ti ti-copy"></i></button></div>
+      <div class="row"><label>Ссылка скаута</label><input readonly id="scoutLink" value=""><button class="btn" onclick="copyField('scoutLink')"><i class="ti ti-copy"></i></button></div>
       <div class="note" style="margin:14px 0 0;"><i class="ti ti-coin"></i><div><b>5% от дохода приведённого — пожизненно.</b> Пока он зарабатывает, ты получаешь свой процент. Плюс 2 500 ₽ разово, когда он сделает первые 5 оплат.<br><br>Считается только доход с продаж. Оплата за просмотры в скаутинг не входит. У приведённого ничего не вычитается — 5% платит площадка сверху.</div></div>
     </div></div>
 
@@ -1283,9 +1283,9 @@
     <div class="box">
       <div class="bh">О продукте</div>
       <div class="bp">
-        <div class="row"><label>Компания</label><input id="brCompany" placeholder="Название" style="background:#fff;color:var(--text);"></div>
+        <div class="row"><label>Компания *</label><input id="brCompany" required placeholder="Название" style="background:#fff;color:var(--text);"></div>
         <div class="row"><label>Сайт</label><input id="brSite" placeholder="https://" style="background:#fff;color:var(--text);"></div>
-        <div class="row"><label>Ниша</label><select id="brNiche" style="flex:1;">
+        <div class="row"><label>Ниша *</label><select id="brNiche" required style="flex:1;">
           <option>Образование</option><option>Нейросети и AI</option><option>Маркетплейсы</option>
           <option>Финансы</option><option>Товары</option><option>Другое</option>
         </select></div>
@@ -1314,8 +1314,8 @@
     <div class="box">
       <div class="bh">Контакт</div>
       <div class="bp">
-        <div class="row"><label>Имя</label><input id="brName" style="background:#fff;color:var(--text);"></div>
-        <div class="row"><label>Телеграм</label><input id="brTg" placeholder="@nickname" style="background:#fff;color:var(--text);"></div>
+        <div class="row"><label>Имя *</label><input id="brName" required style="background:#fff;color:var(--text);"></div>
+        <div class="row"><label>Телеграм *</label><input id="brTg" required placeholder="@nickname" style="background:#fff;color:var(--text);"></div>
       </div>
     </div>
 
@@ -1351,8 +1351,9 @@
   <div class="pg" id="p-a-offers">
     <h1>Офферы<span class="qm" onclick="qq(event,'offers')">?</span></h1>
     <p class="sub">Что видят креаторы и как настроены ставки</p>
+    <div class="row" style="justify-content:flex-end;margin-bottom:14px;"><button class="btn p" onclick="openOfferNew()"><i class="ti ti-plus"></i>Добавить оффер</button></div>
     <div class="box"><div class="scroll"><table class="dt">
-      <thead><tr><th>Оффер</th><th>Модель</th><th>Ставка</th><th>За просмотр</th><th>Подключено</th><th>Оплат</th><th>Доступ</th></tr></thead>
+      <thead><tr><th>Оффер</th><th>Модель</th><th>Ставка</th><th>За просмотр</th><th>Подключено</th><th>Оплат</th><th>Доступ</th><th></th></tr></thead>
       <tbody id="adminOffersTb"></tbody>
     </table></div></div>
   </div>
@@ -1414,9 +1415,9 @@
       <div class="c"><div class="ic" style="background:var(--blue-bg);color:var(--blue);"><i class="ti ti-users"></i></div><div class="n" id="acPeople">—</div><div class="l">Участников</div></div>
       <div class="c hi"><div class="ic" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-coin"></i></div><div class="n" id="acFund">—</div><div class="s">по всем конкурсам</div><div class="l">Призовой фонд</div></div>
     </div>
-    <div class="row" style="justify-content:flex-end;margin-bottom:14px;"><button class="btn p" onclick="t('Форма создания конкурса')"><i class="ti ti-plus"></i>Создать конкурс</button></div>
+    <div class="row" style="justify-content:flex-end;margin-bottom:14px;"><button class="btn p" onclick="openContestNew()"><i class="ti ti-plus"></i>Создать конкурс</button></div>
     <div class="box"><div class="scroll"><table class="dt">
-      <thead><tr><th>Конкурс</th><th>Оффер</th><th>Метрика</th><th>Период</th><th>Участников</th><th>Фонд</th><th>Статус</th></tr></thead>
+      <thead><tr><th>Конкурс</th><th>Оффер</th><th>Метрика</th><th>Период</th><th>Участников</th><th>Фонд</th><th>Статус</th><th></th></tr></thead>
       <tbody id="adminContestsTb"></tbody>
     </table></div></div>
     <div class="note"><i class="ti ti-bulb"></i><div>Конкурс на вирусное видео работает на охваты, конкурс на оплаты — на выручку. Держать оба сразу выгоднее: те, у кого большие охваты но слабая конверсия, всё равно участвуют и не выпадают из системы.</div></div>
@@ -1504,8 +1505,9 @@
       <div class="c"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-certificate"></i></div><div class="n" id="schCompleted">—</div><div class="l">Прошли курс</div></div>
       <div class="c hi"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-trending-up"></i></div><div class="n" id="schMult">—</div><div class="s">против непрошедших</div><div class="l">Оплат у выпускников</div></div>
     </div>
+    <div class="row" style="justify-content:flex-end;margin-bottom:14px;"><button class="btn p" onclick="openCourseNew()"><i class="ti ti-plus"></i>Добавить курс</button></div>
     <div class="box"><div class="scroll"><table class="dt" style="min-width:auto;">
-      <thead><tr><th>Курс</th><th>Начали</th><th>Прошли</th><th>Дошли до оплат</th></tr></thead>
+      <thead><tr><th>Курс</th><th>Начали</th><th>Прошли</th><th>Дошли до оплат</th><th></th></tr></thead>
       <tbody id="schoolAdminTb"></tbody>
     </table></div></div>
   </div>
@@ -1573,6 +1575,117 @@
       <div class="pmfoot">
         Ролики из этой заявки пометим как «выведено» · <a href="https://sreda.ru/withdraw" target="_blank">Вывод в SREDA</a>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovContest" onclick="if(event.target===this)closeContest()">
+  <div class="md" style="max-width:560px;">
+    <div class="mdh">
+      <div><h3 id="ctFormT">Новый конкурс</h3><p>Лидерборд считается автоматически по принятым роликам за период</p></div>
+      <button class="mdx" onclick="closeContest()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb">
+      <div class="row"><label>Название</label><input id="ctfName" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: Больше всех оплат"></div>
+      <div class="row"><label>Оффер</label><select id="ctfOffer" style="flex:1;background:#fff;color:var(--text);">
+        <option value="">Все офферы</option><option>Study AI</option><option>Кэмп</option><option>Автор24</option>
+      </select></div>
+      <div class="row"><label>Метрика</label><select id="ctfMetric" style="flex:1;background:#fff;color:var(--text);">
+        <option value="payments">Количество принятых роликов</option>
+        <option value="views_sum">Сумма просмотров</option>
+        <option value="views_max">Лучший ролик по просмотрам</option>
+        <option value="earned">Начислено, ₽</option>
+      </select></div>
+      <div class="row"><label>Период</label>
+        <input type="date" id="ctfFrom" style="flex:1;background:#fff;color:var(--text);">
+        <span style="padding:0 6px;color:var(--text-muted);">—</span>
+        <input type="date" id="ctfTo" style="flex:1;background:#fff;color:var(--text);">
+      </div>
+      <div class="row"><label>Призовой фонд</label><input id="ctfFund" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: 200 000 ₽"></div>
+      <div style="margin-top:12px;"><label style="font-size:12.5px;color:var(--text-2);display:block;margin-bottom:5px;">Описание / условия</label>
+      <textarea id="ctfDesc" placeholder="Кто и как участвует, минимальный порог"></textarea></div>
+      <div style="margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <label style="font-size:12.5px;color:var(--text-2);">Призовые места</label>
+          <button class="btn" style="padding:4px 10px;font-size:12px;" onclick="ctAddPrizeRow()"><i class="ti ti-plus"></i>Место</button>
+        </div>
+        <div id="ctfPrizes"></div>
+      </div>
+    </div>
+    <div style="padding:0 22px 22px;display:flex;gap:9px;">
+      <button class="btn p" style="flex:1;justify-content:center;" onclick="ctSave()"><i class="ti ti-check"></i>Сохранить</button>
+      <button class="btn" onclick="closeContest()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovBrief" onclick="if(event.target===this)closeBrief()">
+  <div class="md" style="max-width:560px;">
+    <div class="mdh">
+      <div><h3 id="brT">—</h3><p id="brSub">—</p></div>
+      <button class="mdx" onclick="closeBrief()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb" id="brB"></div>
+    <div style="padding:0 22px 22px;display:flex;gap:9px;">
+      <button class="btn p" style="flex:1;justify-content:center;" onclick="brSave()"><i class="ti ti-check"></i>Сохранить</button>
+      <button class="btn" onclick="closeBrief()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovOffer" onclick="if(event.target===this)closeOffer()">
+  <div class="md" style="max-width:480px;">
+    <div class="mdh">
+      <div><h3 id="ofFormT">Новый оффер</h3><p>Карточка в админской таблице офферов</p></div>
+      <button class="mdx" onclick="closeOffer()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb">
+      <div class="row"><label>Название</label><input id="ofName" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: Кэмп"></div>
+      <div class="row"><label>Модель</label><select id="ofModel" style="flex:1;background:#fff;color:var(--text);">
+        <option>RevShare</option><option>Фикс</option><option>Оплата за просмотры</option>
+      </select></div>
+      <div class="row"><label>Ставка</label><input id="ofRate" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: 70% / 30%"></div>
+      <div class="row"><label>За просмотр</label><input id="ofPerView" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: 0,20 ₽"></div>
+      <div class="row"><label>Доступ</label><select id="ofAccess" style="flex:1;background:#fff;color:var(--text);">
+        <option>всем</option><option>с уровня 2</option><option>с уровня 3</option><option>скоро</option>
+      </select></div>
+    </div>
+    <div style="padding:0 22px 22px;display:flex;gap:9px;">
+      <button class="btn p" style="flex:1;justify-content:center;" onclick="ofSave()"><i class="ti ti-check"></i>Сохранить</button>
+      <button class="btn" onclick="closeOffer()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovCourse" onclick="if(event.target===this)closeCourse()">
+  <div class="md" style="max-width:440px;">
+    <div class="mdh">
+      <div><h3 id="scFormT">Новый курс</h3><p>Карточка курса в админской статистике Школы</p></div>
+      <button class="mdx" onclick="closeCourse()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb">
+      <div class="row"><label>Название</label><input id="scName" style="flex:1;background:#fff;color:var(--text);" placeholder="Название курса"></div>
+      <div class="row"><label>Начали</label><div class="stepper"><input type="number" id="scStarted" value="0"></div></div>
+      <div class="row"><label>Прошли</label><div class="stepper"><input type="number" id="scCompleted" value="0"></div></div>
+      <div class="row"><label>Дошли до оплат</label><div class="stepper"><input type="number" id="scPaid" value="0"></div></div>
+      <div class="note" style="margin:14px 0 0;"><i class="ti ti-info-circle"></i><div>Реального видео-контента уроков в прототипе пока нет — здесь создаётся только карточка курса со статистикой.</div></div>
+    </div>
+    <div style="padding:0 22px 22px;display:flex;gap:9px;">
+      <button class="btn p" style="flex:1;justify-content:center;" onclick="scSave()"><i class="ti ti-check"></i>Сохранить</button>
+      <button class="btn" onclick="closeCourse()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovPayTpl" onclick="if(event.target===this)closePayTpl()">
+  <div class="md" style="max-width:460px;">
+    <div class="mdh">
+      <div><h3>Шаблон для выплаты</h3><p>Скопируйте и передайте дальше по процессу выплаты</p></div>
+      <button class="mdx" onclick="closePayTpl()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb">
+      <pre id="payTplText" style="white-space:pre-wrap;font-family:inherit;font-size:13px;background:var(--card,#f7f7fb);border:1px solid var(--border);border-radius:10px;padding:14px;line-height:1.7;margin:0;"></pre>
+      <button class="btn p" style="width:100%;justify-content:center;margin-top:12px;" onclick="copyPayTpl()"><i class="ti ti-copy"></i>Скопировать</button>
     </div>
   </div>
 </div>
@@ -1795,7 +1908,7 @@ function drawVid(){
  const tb=document.getElementById('vtb'); if(!tb) return;
  if(!list.length){ tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:22px 0;">За этот период роликов нет</td></tr>'; return; }
  tb.innerHTML=list.map(x=>{
-  const pl=PL[x.p], pay=(x.st==='ok')?Math.round(x.v*0.15*x.k):0;
+  const pl=PL[x.p], pay=(x.st==='ok')?Math.round(x.v*(RATE[x.of]||0)*(LVM[MYLV]||1)*x.k):0;
   const f=FMT.find(y=>y.k===x.k);
   let cell;
   if(x.st==='small') cell='<span class="zero">—</span>';
@@ -1850,7 +1963,11 @@ function markSend(){
   .then(({ok,d})=>{
    if(!ok){ t(d.error||'Не удалось разметить ролик'); return; }
    VID=d.videos; drawVid(); closeMark();
+   if(d.moderation){ MOD=d.moderation; drawMod(); }
+   if(d.done){ DONE=d.done; drawDone(); }
+   if(d.notification){ NOTIF=[d.notification,...NOTIF]; drawNotif(); }
    t(k===0.05?'Принято сразу — деньги начислены':'Отправлено на проверку');
+   applyLevelChange(d.levelChange);
   })
   .catch(()=>t('Не удалось разметить ролик'));
 }
@@ -1882,7 +1999,37 @@ const cl=v=>v?'money':'zero';
 let LVN={1:'Новичок',2:'Активный',3:'Профи',4:'Топ'};
 let LVG={1:30,2:60,3:100,4:100};   // оплат за последние 30 дней
 let LVM={1:1,2:1.2,3:1.4,4:1.6};   // множитель ставки за просмотр
-const MYLV=1;
+// Раньше это была захардкоженная константа (всегда 1 уровень) — калькулятор
+// и форма разметки показывали ставку не по реальному уровню креатора.
+// Теперь подставляется настоящий уровень из данных бекенда (см. boot()) и
+// обновляется при любом пересчёте уровня (см. applyLevelChange()).
+let MYLV=1;
+// Обновляет уровень креатора после пересчёта на бекенде (после разметки,
+// приёма или снятия ролика — см. markSend()/modOk()/dropVid()) и синхронно
+// обновляет всё, что от него зависит: карточку своего уровня, калькулятор,
+// форму разметки и, если это другой креатор, — таблицу креаторов у админа.
+// Ставка за просмотр умножается на надбавку уровня креатора — используем
+// уровень, зафиксированный на записи (для новых MOD/DONE он снимается в
+// момент разметки/приёма), иначе берём текущий уровень креатора из D.
+function lvMultFor(nick,snapshotLv){
+ const lv=snapshotLv||(D.find(x=>x.n===nick)||{}).lv||1;
+ return LVM[lv]||1;
+}
+function applyLevelChange(lc){
+ if(!lc||!lc.changed) return;
+ const cr=D.find(x=>x.n===lc.nick);
+ if(cr) cr.lv=lc.newLevel;
+ if(lc.nick===MYNICK){
+  MYLV=lc.newLevel;
+  const me=D.find(x=>x.n===MYNICK);
+  if(me) fillCreator(me);
+  if(document.getElementById('cv')) calc();
+  if(markId!=null && document.getElementById('mkOf')) markRecalc();
+  t('Твой уровень изменился: '+lc.prevLevel+' → '+lc.newLevel+' ('+LVN[lc.newLevel]+')');
+ } else if(cr){
+  r();
+ }
+}
 
 function fillCreator(d){
  document.getElementById('cName').textContent=d.n;
@@ -1978,9 +2125,9 @@ function drawMod(){
  if(!tb) return;
  tb.innerHTML=MOD.map(m=>{
   const pl=PL[m.p], f=FMT.find(y=>y.k===m.k);
-  const pay=Math.round(m.v*RATE[m.of]*m.k);
+  const pay=Math.round(m.v*RATE[m.of]*(LVM[m.lv]||1)*m.k);
   const btns=FMT.map(x=>'<button class="kbtn'+(x.k===m.k?' on':'')+'" title="'+x.n+'" onclick="setK('+m.i+','+x.k+')">'+String(x.k).replace('.',',')+'</button>').join('');
-  return '<tr><td>'+m.c+' <span class="tag m">'+m.lv+'</span></td>'+
+  return '<tr><td>'+m.c+' <span class="tag m">'+m.lv+'</span>'+(m.viewed?'':' <span class="tag r">новое</span>')+'</td>'+
   '<td data-l="Охваты"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i></span></td>'+
   '<td data-l="ER" style="font-weight:500">'+nf(m.v)+'</td>'+
   '<td data-l="За просмотры"><span class="tag v">'+m.of+'</span></td>'+
@@ -2007,6 +2154,7 @@ function modOk(i){
    MOD=d.moderation; DONE=d.done;
    if(d.notification){ NOTIF=[d.notification,...NOTIF]; drawNotif(); }
    drawMod(); drawDone();
+   applyLevelChange(d.levelChange);
   })
   .catch(()=>t('Не удалось принять ролик'));
 }
@@ -2017,7 +2165,7 @@ function drawDone(){
  const tb=document.getElementById('donetb'); if(!tb) return;
  const q=(document.getElementById('dq').value||'').toLowerCase();
  tb.innerHTML=DONE.filter(d=>d.c.toLowerCase().includes(q)).map(d=>{
-  const pl=PL[d.p], pay=Math.round(d.v*RATE[d.of]*d.k);
+  const pl=PL[d.p], pay=Math.round(d.v*RATE[d.of]*lvMultFor(d.c,d.lv)*d.k);
   const btns=FMT.map(x=>'<button class="kbtn'+(x.k===d.k?' on':'')+'" title="'+x.n+'" onclick="redoK('+d.i+','+x.k+')">'+String(x.k).replace('.',',')+'</button>').join('');
   return '<tr><td>'+d.c+'</td>'+
   '<td data-l="Креатор"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i></span></td>'+
@@ -2055,6 +2203,7 @@ function dropVid(i){
    if(!ok){ t(res.error||'Не удалось снять ролик'); return; }
    DONE=res.done; drawDone();
    t(res.creator+': ролик снят с оплаты, списано '+res.was.toLocaleString('ru-RU')+' ₽');
+   applyLevelChange(res.levelChange);
   })
   .catch(()=>t('Не удалось снять ролик'));
 }
@@ -2117,11 +2266,99 @@ function drawAdminContests(){
  set('acPeople',CONTESTS_ADMIN_SUMMARY.participants);
  set('acFund',CONTESTS_ADMIN_SUMMARY.fund);
  const tb=document.getElementById('adminContestsTb'); if(!tb) return;
- const stCls={'идёт':'g','запланирован':'a','черновик':'m'};
- tb.innerHTML=CONTESTS.map(c=>
-  '<tr><td>'+c.n+'</td><td>'+c.of+'</td><td>'+c.unit+'</td><td>'+c.period+'</td>'+
+ const stCls={'идёт':'g','запланирован':'a','черновик':'m','завершён':'m'};
+ tb.innerHTML=CONTESTS.map(c=>{
+  const editable=!!(c.periodStart&&c.periodEnd);
+  const act=editable
+   ? '<button class="btn" style="padding:5px 9px;" onclick="openContestEdit(\''+c.id+'\')" title="Изменить"><i class="ti ti-pencil"></i></button>'+
+     '<button class="btn" style="padding:5px 9px;margin-left:6px;'+(ctDeleteConfirm===c.id?'color:var(--red);':'')+'" onclick="ctDelete(\''+c.id+'\')" title="Удалить">'+
+      (ctDeleteConfirm===c.id?'Точно?':'<i class="ti ti-trash"></i>')+'</button>'
+   : '<span class="zero">—</span>';
+  return '<tr><td>'+c.n+'</td><td>'+(c.of||'Все офферы')+'</td><td>'+c.unit+'</td><td>'+c.period+'</td>'+
   '<td>'+(c.people||'<span class="zero">—</span>')+'</td><td class="money">'+c.fund+'</td>'+
-  '<td><span class="tag '+(stCls[c.adminStatus]||'m')+'">'+c.adminStatus+'</span></td></tr>').join('');
+  '<td><span class="tag '+(stCls[c.adminStatus]||'m')+'">'+c.adminStatus+'</span></td>'+
+  '<td style="white-space:nowrap;">'+act+'</td></tr>';
+ }).join('');
+}
+
+/* ===== КОНСТРУКТОР КОНКУРСОВ (админ) ===== */
+let ctEditId=null;
+let ctPrizes=[];
+let ctDeleteConfirm=null;
+function ctDrawPrizes(){
+ const el=document.getElementById('ctfPrizes'); if(!el) return;
+ el.innerHTML=(ctPrizes.map((p,i)=>
+  '<div class="row" style="margin-bottom:6px;">'+
+  '<input value="'+String(p[0]||'').replace(/"/g,'&quot;')+'" oninput="ctPrizes['+i+'][0]=this.value" style="width:140px;background:#fff;color:var(--text);" placeholder="🥇 1 место">'+
+  '<input value="'+String(p[1]||'').replace(/"/g,'&quot;')+'" oninput="ctPrizes['+i+'][1]=this.value" style="flex:1;background:#fff;color:var(--text);" placeholder="15 000 ₽">'+
+  '<button class="btn" style="padding:5px 9px;" onclick="ctPrizes.splice('+i+',1);ctDrawPrizes();"><i class="ti ti-trash"></i></button>'+
+  '</div>').join(''))||'<div style="font-size:12.5px;color:var(--text-muted);">Пока нет призовых мест</div>';
+}
+function ctAddPrizeRow(){ ctPrizes.push(['','']); ctDrawPrizes(); }
+function openContestNew(){
+ ctEditId=null; ctPrizes=[['🥇 1 место',''],['🥈 2 место',''],['🥉 3 место','']];
+ document.getElementById('ctFormT').textContent='Новый конкурс';
+ document.getElementById('ctfName').value='';
+ document.getElementById('ctfOffer').value='';
+ document.getElementById('ctfMetric').value='payments';
+ document.getElementById('ctfFrom').value='';
+ document.getElementById('ctfTo').value='';
+ document.getElementById('ctfFund').value='';
+ document.getElementById('ctfDesc').value='';
+ ctDrawPrizes();
+ document.getElementById('ovContest').classList.add('on');
+}
+function openContestEdit(id){
+ const c=CONTESTS.find(x=>x.id===id); if(!c) return;
+ ctEditId=id; ctPrizes=(c.prizes||[]).map(p=>[p[0],p[1]]);
+ document.getElementById('ctFormT').textContent='Изменить конкурс';
+ document.getElementById('ctfName').value=c.n||'';
+ document.getElementById('ctfOffer').value=c.of||'';
+ document.getElementById('ctfMetric').value=c.metric||'payments';
+ document.getElementById('ctfFrom').value=c.periodStart||'';
+ document.getElementById('ctfTo').value=c.periodEnd||'';
+ document.getElementById('ctfFund').value=(c.fund==='—'?'':c.fund)||'';
+ document.getElementById('ctfDesc').value=c.d||'';
+ ctDrawPrizes();
+ document.getElementById('ovContest').classList.add('on');
+}
+function closeContest(){ document.getElementById('ovContest').classList.remove('on'); }
+function ctSave(){
+ const name=document.getElementById('ctfName').value.trim();
+ const offerKey=document.getElementById('ctfOffer').value;
+ const metric=document.getElementById('ctfMetric').value;
+ const periodStart=document.getElementById('ctfFrom').value;
+ const periodEnd=document.getElementById('ctfTo').value;
+ const fund=document.getElementById('ctfFund').value.trim();
+ const description=document.getElementById('ctfDesc').value.trim();
+ const prizes=ctPrizes.filter(p=>p[0]&&p[0].trim()&&p[1]&&p[1].trim());
+ if(!name){ t('Укажите название конкурса'); return; }
+ if(!periodStart||!periodEnd){ t('Укажите период конкурса'); return; }
+ const body={name,offerKey:offerKey||null,metric,periodStart,periodEnd,fund,description,prizes};
+ const url=ctEditId?('/api/contests/'+ctEditId):'/api/contests';
+ const method=ctEditId?'PATCH':'POST';
+ fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось сохранить конкурс'); return; }
+   CONTESTS=d.contests; CONTESTS_ADMIN_SUMMARY=d.contestsAdminSummary;
+   drawAdminContests(); drawContests(); closeContest();
+   t(ctEditId?'Конкурс обновлён':'Конкурс создан');
+  })
+  .catch(()=>t('Не удалось сохранить конкурс'));
+}
+function ctDelete(id){
+ if(ctDeleteConfirm!==id){ ctDeleteConfirm=id; drawAdminContests(); return; }
+ ctDeleteConfirm=null;
+ fetch('/api/contests/'+id,{method:'DELETE'})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось удалить конкурс'); return; }
+   CONTESTS=d.contests; CONTESTS_ADMIN_SUMMARY=d.contestsAdminSummary;
+   drawAdminContests(); drawContests();
+   t('Конкурс удалён');
+  })
+  .catch(()=>t('Не удалось удалить конкурс'));
 }
 function ctOpen(id){
  const c=CONTESTS.find(x=>x.id===id);
@@ -2360,12 +2597,13 @@ function drawPay(){
                           '<button class="btn" style="margin-left:6px;" onclick="payAct('+x.id+',\'отклонена\')"><i class="ti ti-x"></i></button>';
   if(x.st==='в работе')act='<button class="btn p" onclick="payAct('+x.id+',\'выплачено\')"><i class="ti ti-check"></i>Выплачено</button>'+
                           '<button class="btn" style="margin-left:6px;" onclick="payAct('+x.id+',\'отклонена\')"><i class="ti ti-x"></i></button>';
-  return '<tr><td data-l="Креатор"><b>'+x.c+'</b></td><td data-l="ID" style="color:var(--text-muted)">'+x.eid+'</td>'+
+  const tpl=x.template?'<button class="btn" style="margin-left:6px;" onclick="openPayTpl('+x.id+')" title="Шаблон для выплаты"><i class="ti ti-clipboard-text"></i>Шаблон</button>':'';
+  return '<tr><td data-l="Креатор"><b>'+x.c+'</b>'+(x.viewed?'':' <span class="tag r">новое</span>')+'</td><td data-l="ID" style="color:var(--text-muted)">'+x.eid+'</td>'+
    '<td data-l="Сумма" class="money">'+x.s.toLocaleString('ru-RU')+' ₽</td>'+
    '<td data-l="Способ">'+x.w+'</td><td data-l="Роликов">'+(x.v||'<span class="zero">—</span>')+'</td>'+
    '<td data-l="Заявка">'+x.d+'</td>'+
    '<td data-l="Статус"><span class="tag '+PAYST[x.st]+'">'+x.st+'</span></td>'+
-   '<td style="white-space:nowrap;">'+act+'</td></tr>';
+   '<td style="white-space:nowrap;">'+act+tpl+'</td></tr>';
  }).join('');
 }
 function payAct(id,st){
@@ -2382,6 +2620,29 @@ function payAct(id,st){
    drawPay(); drawWD(); drawVid();
   })
   .catch(()=>t('Не удалось обновить заявку'));
+}
+function openPayTpl(id){
+ const x=PAYQ.find(y=>y.id===id); if(!x||!x.template) return;
+ const tpl=x.template;
+ const text=tpl.idLine+'\nПериод: '+tpl.period+'\n'+tpl.projects.join('\n')+'\nИтого: '+tpl.total+'\n'+tpl.method;
+ document.getElementById('payTplText').textContent=text;
+ window.__payTplText=text;
+ document.getElementById('ovPayTpl').classList.add('on');
+}
+function closePayTpl(){ document.getElementById('ovPayTpl').classList.remove('on'); }
+function copyPayTpl(){
+ if(!navigator.clipboard||!navigator.clipboard.writeText){ t('Скопируйте текст вручную'); return; }
+ navigator.clipboard.writeText(window.__payTplText||'').then(()=>t('Скопировано')).catch(()=>t('Не удалось скопировать'));
+}
+// Раньше кнопки копирования (реф-ссылка, промокод, ссылка скаута) просто
+// показывали тост «Скопировано», ничего реально не кладя в буфер обмена —
+// теперь копируют по-настоящему, с тем же fallback на ручное выделение,
+// что и у шаблона выплаты.
+function copyField(id){
+ const el=document.getElementById(id); if(!el) return;
+ const text=el.value!=null?el.value:el.textContent;
+ if(!navigator.clipboard||!navigator.clipboard.writeText){ el.select&&el.select(); t('Скопируйте текст вручную'); return; }
+ navigator.clipboard.writeText(text||'').then(()=>t('Скопировано')).catch(()=>{ el.select&&el.select(); t('Не удалось скопировать — выделите текст вручную'); });
 }
 const MYNICK='@marsedzhan', MYEID=629398;
 let WD=[];
@@ -2491,7 +2752,22 @@ function closeSent(){ document.getElementById('ovSent').classList.remove('on'); 
 /* ===== БРИФ ЗАКАЗЧИКА (отправка на бекенд + список у админа) ===== */
 let BRIEFS=[];
 function val(id){ const e=document.getElementById(id); return e?e.value:''; }
+// Для текста, который приходит от внешнего пользователя (бриф с лендинга
+// заполняет посторонний человек, не креатор и не админ) — экранируем перед
+// вставкой в innerHTML, чтобы название компании или сообщение не могли
+// сломать вёрстку или выполнить скрипт.
+function escHtml(s){
+ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function submitBrief(){
+ const req=[['brCompany','название компании'],['brName','имя'],['brTg','телеграм для связи']];
+ const missing=req.filter(([id])=>!val(id).trim());
+ if(missing.length){
+  missing.forEach(([id])=>{ const e=document.getElementById(id); if(e) e.style.borderColor='var(--red)'; });
+  t('Заполните обязательные поля: '+missing.map(([,label])=>label).join(', '));
+  return;
+ }
+ req.forEach(([id])=>{ const e=document.getElementById(id); if(e) e.style.borderColor=''; });
  const body={
   company:val('brCompany'), site:val('brSite'), niche:val('brNiche'),
   message:val('brMessage'), payModel:val('bm'),
@@ -2510,18 +2786,121 @@ function drawBriefs(){
  const tb=document.getElementById('briefsTb'); if(!tb) return;
  const stCls={'подключён':'g','на модерации':'a','новая':'m'};
  tb.innerHTML=BRIEFS.map(b=>
-  '<tr><td>'+b.company+'</td><td>'+b.niche+'</td><td>'+b.model+'</td><td>'+(b.budget==='—'?'<span class="zero">—</span>':b.budget)+'</td>'+
+  '<tr class="clk" onclick="openBrief('+b.id+')"><td>'+escHtml(b.company)+(b.viewed?'':' <span class="tag r">новое</span>')+'</td><td>'+escHtml(b.niche)+'</td><td>'+escHtml(b.model)+'</td><td>'+(b.budget==='—'?'<span class="zero">—</span>':escHtml(b.budget))+'</td>'+
   '<td>'+b.date+'</td><td><span class="tag '+(stCls[b.status]||'m')+'">'+b.status+'</span></td></tr>').join('');
+}
+let brId=null;
+function openBrief(id){
+ brId=id;
+ const b=BRIEFS.find(x=>x.id===id); if(!b) return;
+ document.getElementById('brT').textContent=b.company;
+ document.getElementById('brSub').textContent=b.niche+' · '+b.model+' · '+b.date;
+ const row=(l,v)=>'<div class="row"><label>'+l+'</label><div style="flex:1;font-size:13.5px;color:var(--text);">'+(v||'<span class="zero">—</span>')+'</div></div>';
+ document.getElementById('brB').innerHTML=
+  row('Бюджет на тест', b.budget&&b.budget!=='—'?escHtml(b.budget):'')+
+  row('Гео', escHtml(b.geo))+
+  row('Сайт', b.site?('<a href="'+escHtml(b.site)+'" target="_blank" rel="noopener" style="color:var(--violet)">'+escHtml(b.site)+'</a>'):'')+
+  row('Контакт', (b.contactName?escHtml(b.contactName):'—')+(b.contactTg?' · '+escHtml(b.contactTg):''))+
+  '<div style="margin-top:8px;"><label style="font-size:12.5px;color:var(--text-2);display:block;margin-bottom:5px;">Сообщение от заказчика</label>'+
+  '<div style="font-size:13.5px;color:var(--text);white-space:pre-wrap;background:var(--card,#f7f7fb);border:1px solid var(--border);border-radius:10px;padding:11px;">'+(b.message?escHtml(b.message):'<span class="zero">—</span>')+'</div></div>'+
+  '<div class="row" style="margin-top:14px;"><label>Статус</label><select id="brStatus" style="flex:1;background:#fff;color:var(--text);">'+
+   ['новая','на модерации','подключён'].map(s=>'<option'+(s===b.status?' selected':'')+'>'+s+'</option>').join('')+
+  '</select></div>'+
+  '<div style="margin-top:12px;"><label style="font-size:12.5px;color:var(--text-2);display:block;margin-bottom:5px;">Заметка админа</label>'+
+  '<textarea id="brNote" placeholder="Например: перезвонить, ждём бюджет"></textarea></div>';
+ document.getElementById('brNote').value=b.note||'';
+ document.getElementById('ovBrief').classList.add('on');
+ // Открытие карточки — уже просмотр, снимаем пометку «новое» сразу, даже
+ // если админ ничего не поменяет и просто закроет модалку.
+ if(!b.viewed){
+  fetch('/api/briefs/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({})})
+   .then(r=>r.json()).then(d=>{ if(d.briefs){ BRIEFS=d.briefs; drawBriefs(); } })
+   .catch(()=>{});
+ }
+}
+function closeBrief(){ document.getElementById('ovBrief').classList.remove('on'); brId=null; }
+function brSave(){
+ if(brId==null) return;
+ const status=document.getElementById('brStatus').value;
+ const note=document.getElementById('brNote').value;
+ fetch('/api/briefs/'+brId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,note})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось сохранить заявку'); return; }
+   BRIEFS=d.briefs; drawBriefs(); closeBrief();
+   t('Заявка обновлена');
+  })
+  .catch(()=>t('Не удалось сохранить заявку'));
 }
 
 /* ===== АДМИНСКАЯ ТАБЛИЦА ОФФЕРОВ ===== */
 let ADMIN_OFFERS=[];
+let ofDeleteConfirm=null;
 function drawAdminOffersTable(){
  const tb=document.getElementById('adminOffersTb'); if(!tb) return;
  tb.innerHTML=ADMIN_OFFERS.map(o=>
-  '<tr><td>'+o.offer+'</td><td>'+o.model+'</td><td>'+o.rate+'</td><td>'+o.perView+'</td>'+
+  '<tr><td>'+escHtml(o.offer)+'</td><td>'+escHtml(o.model)+'</td><td>'+escHtml(o.rate)+'</td><td>'+escHtml(o.perView)+'</td>'+
   '<td>'+o.connected+'</td><td>'+(o.paid==null?'<span class="zero">—</span>':'<span class="money">'+o.paid+'</span>')+'</td>'+
-  '<td><span class="tag '+(o.access==='всем'?'g':o.access==='скоро'?'m':'v')+'">'+o.access+'</span></td></tr>').join('');
+  '<td><span class="tag '+(o.access==='всем'?'g':o.access==='скоро'?'m':'v')+'">'+escHtml(o.access)+'</span></td>'+
+  '<td style="white-space:nowrap;">'+
+   '<button class="btn" style="padding:5px 9px;" onclick="openOfferEdit('+o.id+')" title="Изменить"><i class="ti ti-pencil"></i></button>'+
+   '<button class="btn" style="padding:5px 9px;margin-left:6px;'+(ofDeleteConfirm===o.id?'color:var(--red);':'')+'" onclick="ofDelete('+o.id+')" title="Удалить">'+(ofDeleteConfirm===o.id?'Точно?':'<i class="ti ti-trash"></i>')+'</button>'+
+  '</td></tr>').join('');
+}
+let ofEditId=null;
+function openOfferNew(){
+ ofEditId=null;
+ document.getElementById('ofFormT').textContent='Новый оффер';
+ document.getElementById('ofName').value='';
+ document.getElementById('ofModel').value='RevShare';
+ document.getElementById('ofRate').value='';
+ document.getElementById('ofPerView').value='';
+ document.getElementById('ofAccess').value='всем';
+ document.getElementById('ovOffer').classList.add('on');
+}
+function openOfferEdit(id){
+ const o=ADMIN_OFFERS.find(x=>x.id===id); if(!o) return;
+ ofEditId=id;
+ document.getElementById('ofFormT').textContent='Изменить оффер';
+ document.getElementById('ofName').value=o.offer;
+ document.getElementById('ofModel').value=o.model;
+ document.getElementById('ofRate').value=o.rate==='—'?'':o.rate;
+ document.getElementById('ofPerView').value=o.perView==='—'?'':o.perView;
+ document.getElementById('ofAccess').value=o.access;
+ document.getElementById('ovOffer').classList.add('on');
+}
+function closeOffer(){ document.getElementById('ovOffer').classList.remove('on'); }
+function ofSave(){
+ const offer=document.getElementById('ofName').value.trim();
+ if(!offer){ t('Укажите название оффера'); return; }
+ const body={
+  offer, model:document.getElementById('ofModel').value.trim(),
+  rate:document.getElementById('ofRate').value.trim(),
+  perView:document.getElementById('ofPerView').value.trim(),
+  access:document.getElementById('ofAccess').value.trim(),
+ };
+ const url=ofEditId?('/api/admin/offers/'+ofEditId):'/api/admin/offers';
+ const method=ofEditId?'PATCH':'POST';
+ fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось сохранить оффер'); return; }
+   ADMIN_OFFERS=d.adminOffers; drawAdminOffersTable(); closeOffer();
+   t(ofEditId?'Оффер обновлён':'Оффер добавлен');
+  })
+  .catch(()=>t('Не удалось сохранить оффер'));
+}
+function ofDelete(id){
+ if(ofDeleteConfirm!==id){ ofDeleteConfirm=id; drawAdminOffersTable(); return; }
+ ofDeleteConfirm=null;
+ fetch('/api/admin/offers/'+id,{method:'DELETE'})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось удалить оффер'); return; }
+   ADMIN_OFFERS=d.adminOffers; drawAdminOffersTable();
+   t('Оффер удалён');
+  })
+  .catch(()=>t('Не удалось удалить оффер'));
 }
 
 /* ===== ШКОЛА ===== */
@@ -2537,12 +2916,70 @@ function drawSchoolMine(){
   return '<div class="lesson">'+icons[l.status]+'<div class="t"><b>'+l.title+'</b><span>'+l.modules+' модулей'+(l.progressLabel?' · '+l.progressLabel:'')+'</span></div>'+btn+'</div>';
  }).join('');
 }
+let scDeleteConfirm=null;
 function drawSchoolAdmin(){
  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
  set('schStarted',SCHOOL_ADMIN.started); set('schCompleted',SCHOOL_ADMIN.completed); set('schMult',SCHOOL_ADMIN.multiplier);
  const tb=document.getElementById('schoolAdminTb'); if(!tb) return;
  tb.innerHTML=SCHOOL_ADMIN.courses.map(c=>
-  '<tr><td>'+c.name+'</td><td>'+c.started+'</td><td>'+c.completed+'</td><td class="'+(c.paid?'money':'zero')+'">'+c.paid+'</td></tr>').join('');
+  '<tr><td>'+escHtml(c.name)+'</td><td>'+c.started+'</td><td>'+c.completed+'</td><td class="'+(c.paid?'money':'zero')+'">'+c.paid+'</td>'+
+  '<td style="white-space:nowrap;">'+
+   '<button class="btn" style="padding:5px 9px;" onclick="openCourseEdit('+c.id+')" title="Изменить"><i class="ti ti-pencil"></i></button>'+
+   '<button class="btn" style="padding:5px 9px;margin-left:6px;'+(scDeleteConfirm===c.id?'color:var(--red);':'')+'" onclick="scDelete('+c.id+')" title="Удалить">'+(scDeleteConfirm===c.id?'Точно?':'<i class="ti ti-trash"></i>')+'</button>'+
+  '</td></tr>').join('');
+}
+let scEditId=null;
+function openCourseNew(){
+ scEditId=null;
+ document.getElementById('scFormT').textContent='Новый курс';
+ document.getElementById('scName').value='';
+ document.getElementById('scStarted').value=0;
+ document.getElementById('scCompleted').value=0;
+ document.getElementById('scPaid').value=0;
+ document.getElementById('ovCourse').classList.add('on');
+}
+function openCourseEdit(id){
+ const c=SCHOOL_ADMIN.courses.find(x=>x.id===id); if(!c) return;
+ scEditId=id;
+ document.getElementById('scFormT').textContent='Изменить курс';
+ document.getElementById('scName').value=c.name;
+ document.getElementById('scStarted').value=c.started;
+ document.getElementById('scCompleted').value=c.completed;
+ document.getElementById('scPaid').value=c.paid;
+ document.getElementById('ovCourse').classList.add('on');
+}
+function closeCourse(){ document.getElementById('ovCourse').classList.remove('on'); }
+function scSave(){
+ const name=document.getElementById('scName').value.trim();
+ if(!name){ t('Укажите название курса'); return; }
+ const body={
+  name,
+  started:+document.getElementById('scStarted').value||0,
+  completed:+document.getElementById('scCompleted').value||0,
+  paid:+document.getElementById('scPaid').value||0,
+ };
+ const url=scEditId?('/api/school/admin/courses/'+scEditId):'/api/school/admin/courses';
+ const method=scEditId?'PATCH':'POST';
+ fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось сохранить курс'); return; }
+   SCHOOL_ADMIN=d.schoolAdmin; drawSchoolAdmin(); closeCourse();
+   t(scEditId?'Курс обновлён':'Курс добавлен');
+  })
+  .catch(()=>t('Не удалось сохранить курс'));
+}
+function scDelete(id){
+ if(scDeleteConfirm!==id){ scDeleteConfirm=id; drawSchoolAdmin(); return; }
+ scDeleteConfirm=null;
+ fetch('/api/school/admin/courses/'+id,{method:'DELETE'})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось удалить курс'); return; }
+   SCHOOL_ADMIN=d.schoolAdmin; drawSchoolAdmin();
+   t('Курс удалён');
+  })
+  .catch(()=>t('Не удалось удалить курс'));
 }
 
 /* ===== СКАУТИНГ ===== */
@@ -2896,8 +3333,11 @@ async function boot(){
   BRIEFS=d.briefs; ADMIN_OFFERS=d.adminOffers;
   FMT=d.formats; COEF=d.formats.map(f=>({k:f.k,d:f.d}));
 
+  const me=D.find(x=>x.n==='@marsedzhan');
+  MYLV=(me&&me.lv)||1;
+
   drawOffers();
-  fillCreator(D.find(x=>x.n==='@marsedzhan'));
+  fillCreator(me);
   drawRates(); drawWeekTheme(); drawContests(); drawAdminContests();
   drawNotif(); drawWD(); drawPay(); calc();
   drawAdminOffersTable(); drawBriefs();
@@ -2910,6 +3350,14 @@ async function boot(){
 }
 go('land');
 boot();
+// Лидерборды конкурсов пересчитываются на бекенде раз в час (см. server.js) —
+// подтягиваем их на клиенте с той же частотой, чтобы открытая вкладка не
+// показывала устаревшие места без перезагрузки страницы.
+setInterval(()=>{
+ fetch('/api/contests').then(r=>r.json()).then(list=>{
+  if(Array.isArray(list)){ CONTESTS=list; drawContests(); drawAdminContests(); }
+ }).catch(()=>{});
+}, 60*60*1000);
 (function(){var a=document.querySelector('header .egl'),b=document.getElementById('lLogo');
   if(a&&b) b.src=a.src;})();
 (function(){
