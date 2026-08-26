@@ -1102,6 +1102,11 @@
       <div class="tx" id="nameCardBody"></div>
     </div>
 
+    <div class="lvl" id="emailCard" style="display:none;">
+      <div class="bdg" style="background:linear-gradient(140deg,#8E8CE8,var(--violet));color:#fff;"><i class="ti ti-mail"></i></div>
+      <div class="tx" id="emailCardBody"></div>
+    </div>
+
     <div class="lvl">
       <div class="bdg"><i class="ti ti-award"></i></div>
       <div class="tx">
@@ -2041,6 +2046,7 @@ function fillCreator(d){
  document.getElementById('cName').textContent=d.name||'Мой кабинет';
  document.getElementById('cSub').textContent='ID '+d.id+' · 8 июля — 7 августа';
  drawNameCard(d);
+ drawEmailCard(d);
  const tp=d.pays, goal=LVG[d.lv], left=Math.max(0,goal-tp);
  document.getElementById('cLvl').textContent='Уровень '+d.lv+' · '+LVN[d.lv];
  const rNow=(0.15*LVM[d.lv]).toFixed(3).replace(/0$/,'').replace('.',',');
@@ -2140,6 +2146,46 @@ function saveName(){
    t('Имя сохранено');
   })
   .catch(()=>{ if(err){err.textContent='Не удалось сохранить имя — попробуй ещё раз';err.style.display='block';} });
+}
+
+/* ===== ПОЧТА КРЕАТОРА (только админ) =====
+   Показывается только когда админ смотрит кабинет через «Смотрите
+   кабинет глазами креатора» (asCreator задан) — сам креатор эту плашку
+   не видит и вписать почту не может, это админское поле для выплат.
+   Тот же PATCH /creators/:nick/email, что и в шаблоне выплаты — значение
+   общее, куда бы его ни вписали. */
+let emailEditOn=false;
+function drawEmailCard(d){
+ const elCard=document.getElementById('emailCard'); if(!elCard) return;
+ if(!asCreator || !d){ elCard.style.display='none'; return; }
+ const body=document.getElementById('emailCardBody');
+ elCard.style.display='flex';
+ if(d.email && !emailEditOn){
+  body.innerHTML='<b>Email: '+escHtml(d.email)+'</b><p>Виден только команде — используется в шаблоне выплаты</p>'+
+   '<button class="btn" style="padding:5px 11px;font-size:12px;" onclick="emailEditOn=true;drawEmailCard(D.find(x=>x.n===\''+d.n+'\'))"><i class="ti ti-pencil"></i>Изменить</button>';
+  return;
+ }
+ body.innerHTML='<b>Почта для выплат</b><p>Понадобится, когда дойдёт до выплаты — впиши один раз, дальше подставится сама</p>'+
+  '<div class="row" style="margin:10px 0 0;"><input id="emInput" placeholder="email@example.com" style="background:#fff;color:var(--text);" value="'+escHtml(d.email||'')+'">'+
+  '<button class="btn p" onclick="saveEmail(\''+d.n+'\')"><i class="ti ti-check"></i>Сохранить</button>'+
+  (d.email?'<button class="btn" onclick="emailEditOn=false;drawEmailCard(D.find(x=>x.n===\''+d.n+'\'))">Отмена</button>':'')+'</div>'+
+  '<div id="emErr" style="color:#D64545;font-size:12px;margin-top:6px;display:none;"></div>';
+}
+function saveEmail(nick){
+ const input=document.getElementById('emInput'); if(!input) return;
+ const email=input.value.trim();
+ const err=document.getElementById('emErr');
+ if(!email){ if(err){err.textContent='Введите email';err.style.display='block';} return; }
+ fetch('/api/creators/'+encodeURIComponent(nick)+'/email',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ if(err){err.textContent=d.error||'Не удалось сохранить';err.style.display='block';} return; }
+   D=d.creators; PAYQ=d.payouts; emailEditOn=false;
+   drawEmailCard(D.find(x=>x.n===nick));
+   if(typeof drawPay==='function') drawPay();
+   t('Email сохранён');
+  })
+  .catch(()=>{ if(err){err.textContent='Не удалось сохранить — попробуй ещё раз';err.style.display='block';} });
 }
 
 const FLT=[
