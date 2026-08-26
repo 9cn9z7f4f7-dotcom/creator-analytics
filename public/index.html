@@ -1689,6 +1689,7 @@
       <button class="mdx" onclick="closePayTpl()"><i class="ti ti-x"></i></button>
     </div>
     <div class="mdb">
+      <div id="payTplEmailRow" style="margin-bottom:12px;"></div>
       <pre id="payTplText" style="white-space:pre-wrap;font-family:inherit;font-size:13px;background:var(--card,#f7f7fb);border:1px solid var(--border);border-radius:10px;padding:14px;line-height:1.7;margin:0;"></pre>
       <button class="btn p" style="width:100%;justify-content:center;margin-top:12px;" onclick="copyPayTpl()"><i class="ti ti-copy"></i>Скопировать</button>
     </div>
@@ -2721,13 +2722,48 @@ function payAct(id,st){
   })
   .catch(()=>t('Не удалось обновить заявку'));
 }
+let payTplId=null, payTplEmailEdit=false;
 function openPayTpl(id){
  const x=PAYQ.find(y=>y.id===id); if(!x||!x.template) return;
+ payTplId=id; payTplEmailEdit=false;
+ renderPayTpl();
+ document.getElementById('ovPayTpl').classList.add('on');
+}
+/* Почта — единственное редактируемое поле в этом окне: остальное (ник,
+   ID, суммы) считается на бекенде из уже размеченных роликов и заявки.
+   Если админ её ещё не вписал — над шаблоном показываем маленькую форму;
+   как только сохранена, она уже часть idLine и в самом тексте шаблона
+   (см. buildPayoutTemplate в store.js), форма больше не нужна. */
+function renderPayTpl(){
+ const x=PAYQ.find(y=>y.id===payTplId); if(!x||!x.template) return;
  const tpl=x.template;
+ const row=document.getElementById('payTplEmailRow');
+ if(tpl.email && !payTplEmailEdit){
+  row.innerHTML='<div style="font-size:12.5px;color:var(--text-2);">Email сохранён: <b>'+escHtml(tpl.email)+'</b> — <a href="#" onclick="payTplEmailEdit=true;renderPayTpl();return false;" style="color:var(--violet)">изменить</a></div>';
+ } else {
+  row.innerHTML='<div class="row" style="margin:0;"><input id="payTplEmailInput" placeholder="Email креатора — впишешь один раз, дальше подставится сам" style="background:#fff;color:var(--text);" value="'+(tpl.email?escHtml(tpl.email):'')+'">'+
+   '<button class="btn p" onclick="savePayTplEmail()"><i class="ti ti-check"></i>Сохранить</button></div>'+
+   '<div id="payTplEmailErr" style="color:#D64545;font-size:12px;margin-top:6px;display:none;"></div>';
+ }
  const text=tpl.idLine+'\nПериод: '+tpl.period+'\n'+tpl.projects.join('\n')+'\nИтого: '+tpl.total+'\n'+tpl.method;
  document.getElementById('payTplText').textContent=text;
  window.__payTplText=text;
- document.getElementById('ovPayTpl').classList.add('on');
+}
+function savePayTplEmail(){
+ const x=PAYQ.find(y=>y.id===payTplId); if(!x) return;
+ const input=document.getElementById('payTplEmailInput'); if(!input) return;
+ const email=input.value.trim();
+ const err=document.getElementById('payTplEmailErr');
+ if(!email){ if(err){err.textContent='Введите email';err.style.display='block';} return; }
+ fetch('/api/creators/'+encodeURIComponent(x.c)+'/email',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ if(err){err.textContent=d.error||'Не удалось сохранить';err.style.display='block';} return; }
+   D=d.creators; PAYQ=d.payouts; payTplEmailEdit=false;
+   renderPayTpl(); drawPay();
+   t('Email сохранён');
+  })
+  .catch(()=>{ if(err){err.textContent='Не удалось сохранить — попробуй ещё раз';err.style.display='block';} });
 }
 function closePayTpl(){ document.getElementById('ovPayTpl').classList.remove('on'); }
 function copyPayTpl(){
