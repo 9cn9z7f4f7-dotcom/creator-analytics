@@ -28,6 +28,42 @@ function clone(v) {
   return JSON.parse(JSON.stringify(v));
 }
 
+// ---------------------------------------------------------------------------
+// Общие хелперы (раньше жили в server/routes/api.js — вынесены сюда, т.к.
+// теперь нужны и расчёту конкурсов, и шаблону выплаты, не только апруву).
+// ---------------------------------------------------------------------------
+function pay(views, rate, k) {
+  return Math.round(views * (rate || 0) * k);
+}
+// Множитель ставки за просмотр по уровню креатора. Раньше он применялся
+// только на клиентском калькуляторе-«прикидке» (креатор видел ставку уже
+// с учётом уровня), а сама модерация, история принятых, конкурсы и шаблон
+// выплаты считали по голой базовой ставке — без множителя. Из-за этого
+// «ожидаемая» и реально начисленная сумма могли расходиться. Теперь
+// множитель уровня — обязательная часть формулы pay() везде, где считаются
+// реальные деньги.
+// Если для записи уровень был зафиксирован в момент события (snapshotLv —
+// см. MOD/DONE, куда уровень пишется при разметке/приёме), используем его:
+// платить нужно по уровню на момент ролика, а не задним числом пересчитывать
+// по текущему. Для записей без снимка (старые тестовые данные, до появления
+// этого поля) — берём текущий уровень креатора как разумный запасной вариант.
+function levelMultForNick(nick, snapshotLv) {
+  const lv = snapshotLv || (CREATORS.find((c) => c.n === nick) || {}).lv || 1;
+  return LVM[lv] || 1;
+}
+function fmtViews(v) {
+  return v >= 1000 ? (v / 1000).toFixed(1).replace('.0', '') + 'K' : String(v);
+}
+function ruPlural(n, one, few, many) {
+  const n10 = n % 10, n100 = n % 100;
+  if (n10 === 1 && n100 !== 11) return one;
+  if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return few;
+  return many;
+}
+function ruDays(n) {
+  return ruPlural(n, 'день', 'дня', 'дней');
+}
+
 // =============================================================================
 // ОФФЕРЫ — то, что видит креатор на вкладке «Офферы»
 // TODO(DB): таблица offers (n, model, description, geo[], epl, conf, hold,
@@ -103,20 +139,59 @@ const LVG = { 1: 30, 2: 60, 3: 100, 4: 100 }; // оплат за последн�
 let LVM = { 1: 1, 2: 1.2, 3: 1.4, 4: 1.6 }; // множитель ставки за просмотр — редактируется в «Ставках»
 const MYNICK = '@marsedzhan', MYEID = 629398;
 
+// ---------------------------------------------------------------------------
+// ПЕРЕСЧЁТ УРОВНЕЙ — раньше уровень креатора (lv) был статичным полем,
+// которое никто и никогда не менял. Теперь он реально считается по числу
+// оплат за последние 30 дней (то же правило, что уже было написано в
+// подсказках фронтенда: «меньше 30 оплат» = уровень 1, «от LVG[1]» = уровень
+// 2 и т.д.).
+//
+// ВАЖНО: точность этого пересчёта ограничена тем, что метка времени (ts)
+// есть только у оплат, принятых ПОСЛЕ этого изменения — у семи «исторических»
+// записей DONE ts нет, и в окно 30 дней они сознательно не попадают. Когда
+// появится реальная БД, это исчезнет само — данные будут приходить с
+// нормальными timestamp'ами из таблицы moderation_done.
+// ---------------------------------------------------------------------------
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+function levelForPaymentsCount(n) {
+  if (n >= LVG[3]) return 4;
+  if (n >= LVG[2]) return 3;
+  if (n >= LVG[1]) return 2;
+  return 1;
+}
+
+function recalcCreatorLevel(nick) {
+  const creator = CREATORS.find((c) => c.n === nick);
+  if (!creator) return null;
+  const cutoff = Date.now() - THIRTY_DAYS_MS;
+  const recentPayments = DONE.filter((d) => d.c === nick && typeof d.ts === 'number' && d.ts >= cutoff).length;
+  const newLevel = levelForPaymentsCount(recentPayments);
+  const changed = newLevel !== creator.lv;
+  const prevLevel = creator.lv;
+  creator.lv = newLevel;
+  return { nick, prevLevel, newLevel, changed, recentPayments };
+}
+
+function recalcAllLevels() {
+  return CREATORS.map((c) => recalcCreatorLevel(c.n)).filter(Boolean);
+}
+
 // =============================================================================
 // ОЧЕРЕДЬ ПРОВЕРКИ РОЛИКОВ (админ «Проверка роликов»)
 // TODO(DB): таблица moderation_queue (i, creator, lv, platform, views,
 //           offer_key, k, why)
 // =============================================================================
 let MOD = [
-  { i: 0, c: '@marsedzhan', lv: 2, p: 'tt', v: 112000, of: 'Study AI', k: 0.7 },
-  { i: 1, c: '@wowluda', lv: 1, p: 'ig', v: 86400, of: 'Study AI', k: 1.5 },
-  { i: 2, c: '@lovi_neuro', lv: 1, p: 'ig', v: 31200, of: 'Study AI', k: 1 },
-  { i: 3, c: '@frilans_aa', lv: 2, p: 'ig', v: 24800, of: 'Study AI', k: 0.3 },
-  { i: 4, c: '@naka_neiro', lv: 1, p: 'tt', v: 18600, of: 'Кэмп', k: 0.7 },
-  { i: 5, c: '@maximova_tahsa', lv: 1, p: 'vk', v: 9300, of: 'Study AI', k: 0.05 },
+  { i: 0, c: '@marsedzhan', lv: 2, p: 'tt', v: 112000, of: 'Study AI', k: 0.7, viewed: false },
+  { i: 1, c: '@wowluda', lv: 1, p: 'ig', v: 86400, of: 'Study AI', k: 1.5, viewed: false },
+  { i: 2, c: '@lovi_neuro', lv: 1, p: 'ig', v: 31200, of: 'Study AI', k: 1, viewed: false },
+  { i: 3, c: '@frilans_aa', lv: 2, p: 'ig', v: 24800, of: 'Study AI', k: 0.3, viewed: false },
+  { i: 4, c: '@naka_neiro', lv: 1, p: 'tt', v: 18600, of: 'Кэмп', k: 0.7, viewed: false },
+  { i: 5, c: '@maximova_tahsa', lv: 1, p: 'vk', v: 9300, of: 'Study AI', k: 0.05, viewed: false },
 ];
 let modAutoId = 1000;
+let doneAutoId = 1000;
 
 // Базовая ставка за просмотр по офферу (₽ на первом уровне)
 // TODO(DB): колонка rate_per_view в таблице offers (сейчас отдельная карта,
@@ -165,8 +240,14 @@ const TOP_VIDEOS = [
 // adminStatus — то, как статус подписан в админской таблице (там 4 текстовых
 // статуса: идёт/запланирован/черновик, а полю st для логики хватает live/soon)
 // TODO(DB): таблица contests (+ contest_leaderboard, contest_prizes jsonb)
+//
+// Ниже — четыре «исторических» конкурса из прототипа, у них нет periodStart/
+// periodEnd/metric (это старые статичные заглушки для витрины). Реальный
+// конструктор (POST /api/contests) создаёт конкурсы уже с этими полями и их
+// лидерборд считается по-настоящему функцией computeContestBoard() — из
+// реальных данных DONE, а не выдумывается.
 // =============================================================================
-const CONTESTS = [
+let CONTESTS = [
   { id: 'c1', of: 'Study AI', n: 'Больше всех оплат', st: 'live', adminStatus: 'идёт',
     d: 'Кто приведёт больше новых оплат за месяц. Минимальный порог участия — 5 оплат. Подробные условия в общем чате.',
     period: '1 — 31 августа', left: '24 дня', people: 34, fund: '200 000 ₽', unit: 'оплат',
@@ -196,7 +277,164 @@ const CONTESTS = [
 // отдельные статичные числа, не вычисляемые из списка конкурсов, поэтому
 // оставляем их отдельной заглушкой, а не суммой по CONTESTS.
 // TODO(DB): вью contests_admin_summary
-const CONTESTS_ADMIN_SUMMARY = { live: 2, planned: 2, participants: 41, fund: '500 000 ₽' };
+let CONTESTS_ADMIN_SUMMARY = { live: 2, planned: 2, participants: 41, fund: '500 000 ₽' };
+let contestAutoId = 5; // c1..c4 уже заняты историческими конкурсами выше
+
+// ---------------------------------------------------------------------------
+// КОНСТРУКТОР КОНКУРСОВ — считает лидерборд из уже существующих данных
+// (DONE — принятые размеченные ролики), ничего не выдумывает и не хранит
+// отдельно. Метрика конкурса — это то, что можно посчитать по DONE:
+//   payments   — количество принятых роликов creator'а за период
+//   views_sum  — сумма просмотров принятых роликов за период
+//   views_max  — лучший (по просмотрам) один ролик за период
+//   earned     — сколько всего начислено (₽) за период
+// Период (periodStart/periodEnd) и offerKey (necesito фильтр по офферу,
+// null = все офферы) задаются админом в конструкторе.
+//
+// ОГРАНИЧЕНИЕ (см. также recalcCreatorLevel выше): считаются только те
+// записи DONE, у которых есть реальный timestamp (ts) — то есть принятые
+// ПОСЛЕ появления этого конструктора. Семь исторических записей без ts в
+// подсчёт не попадают. Это станет неактуально после подключения БД.
+// ---------------------------------------------------------------------------
+function metricUnit(metric) {
+  if (metric === 'earned') return '₽';
+  if (metric === 'payments') return 'оплат';
+  return 'просмотров';
+}
+function metricLabel(metric) {
+  return {
+    payments: 'Количество принятых роликов',
+    views_sum: 'Сумма просмотров',
+    views_max: 'Лучший ролик по просмотрам',
+    earned: 'Начислено, ₽',
+  }[metric] || metric;
+}
+function fmtMetricValue(metric, v) {
+  if (metric === 'earned') return v.toLocaleString('ru-RU') + ' ₽';
+  if (metric === 'payments') return v.toLocaleString('ru-RU') + ' ' + ruPlural(v, 'оплата', 'оплаты', 'оплат');
+  return v.toLocaleString('ru-RU') + ' просмотров';
+}
+function contestStatus(c) {
+  const now = Date.now();
+  const start = c.periodStart ? new Date(c.periodStart).getTime() : null;
+  const end = c.periodEnd ? new Date(c.periodEnd + 'T23:59:59').getTime() : null;
+  if (start !== null && now < start) return 'soon';
+  if (end !== null && now > end) return 'ended';
+  return 'live';
+}
+function contestLeftLabel(c, st) {
+  const now = Date.now();
+  if (st === 'ended') return 'завершён';
+  if (!c.periodStart && !c.periodEnd) return c.left || '—'; // старые статичные конкурсы без периода
+  if (st === 'soon') {
+    const days = Math.max(1, Math.ceil((new Date(c.periodStart).getTime() - now) / 86400000));
+    return 'через ' + days + ' ' + ruDays(days);
+  }
+  const days = Math.max(0, Math.ceil((new Date(c.periodEnd + 'T23:59:59').getTime() - now) / 86400000));
+  return days <= 0 ? 'последний день' : days + ' ' + ruDays(days);
+}
+function computeContestBoard(c) {
+  if (!c.metric || (!c.periodStart && !c.periodEnd)) return c; // старый статичный конкурс — не трогаем
+  const start = c.periodStart ? new Date(c.periodStart).getTime() : null;
+  const end = c.periodEnd ? new Date(c.periodEnd + 'T23:59:59').getTime() : null;
+  const entries = DONE.filter((d) => {
+    if (typeof d.ts !== 'number') return false;
+    if (c.of && d.of !== c.of) return false;
+    if (start !== null && d.ts < start) return false;
+    if (end !== null && d.ts > end) return false;
+    return true;
+  });
+  const byCreator = {};
+  entries.forEach((d) => {
+    if (!byCreator[d.c]) byCreator[d.c] = { payments: 0, views_sum: 0, views_max: 0, earned: 0 };
+    const b = byCreator[d.c];
+    b.payments += 1;
+    b.views_sum += d.v;
+    b.views_max = Math.max(b.views_max, d.v);
+    b.earned += pay(d.v, RATE[d.of] * levelMultForNick(d.c, d.lv), d.k);
+  });
+  const ranked = Object.keys(byCreator)
+    .map((nick) => ({ nick, value: byCreator[nick][c.metric] }))
+    .sort((a, b) => b.value - a.value);
+  c.board = ranked.slice(0, 10).map((r) => [r.nick, fmtMetricValue(c.metric, r.value)]);
+  c.people = ranked.length;
+  const myIdx = ranked.findIndex((r) => r.nick === MYNICK);
+  if (myIdx === -1) {
+    c.my = null;
+  } else {
+    const mine = ranked[myIdx];
+    const above = ranked[myIdx - 1];
+    c.my = {
+      pos: myIdx + 1,
+      val: fmtMetricValue(c.metric, mine.value),
+      next: above ? ('до ' + myIdx + ' места — ' + fmtMetricValue(c.metric, above.value - mine.value)) : 'ты на первом месте!',
+    };
+  }
+  c.lastComputedAt = Date.now();
+  return c;
+}
+function recomputeContests() {
+  CONTESTS.forEach((c) => {
+    if (c.periodStart || c.periodEnd) {
+      c.st = contestStatus(c);
+      c.adminStatus = { live: 'идёт', soon: 'запланирован', ended: 'завершён' }[c.st];
+    }
+    c.left = contestLeftLabel(c, c.st);
+    if (c.metric) c.unit = metricUnit(c.metric);
+    computeContestBoard(c);
+  });
+  const fundTotal = CONTESTS.reduce((sum, c) => sum + (Number(String(c.fund || '').replace(/[^\d]/g, '')) || 0), 0);
+  CONTESTS_ADMIN_SUMMARY = {
+    live: CONTESTS.filter((c) => c.st === 'live').length,
+    planned: CONTESTS.filter((c) => c.st === 'soon').length,
+    participants: new Set(CONTESTS.flatMap((c) => (c.board || []).map((b) => b[0]))).size || CONTESTS_ADMIN_SUMMARY.participants,
+    fund: fundTotal ? fundTotal.toLocaleString('ru-RU') + ' ₽' : CONTESTS_ADMIN_SUMMARY.fund,
+  };
+  return CONTESTS;
+}
+
+// ---------------------------------------------------------------------------
+// ШАБЛОН ДЛЯ ЗАЯВКИ НА ВЫПЛАТУ, КОГДА ОНА «В РАБОТЕ» — сама выплата всё ещё
+// делается вручную (см. README), но админу теперь не нужно самому собирать
+// эти данные по разным вкладкам: ролики этой заявки уже помечены полем
+// wd = id заявки, отсюда и период, и разбивка по проектам.
+// Email креатора в системе не хранится нигде (ни в CREATORS, ни в PAYQ) —
+// это отдельный вопрос, шаблон его не выдумывает, только ник и ID эдуграм.
+// ---------------------------------------------------------------------------
+function buildPayoutTemplate(x) {
+  const videos = VIDEOS.filter((v) => v.wd === x.id);
+  let minTs = null, maxTs = null;
+  const byOffer = {};
+  videos.forEach((v) => {
+    const parts = String(v.d).split('.').map(Number);
+    const t = new Date(parts[2] || 1970, (parts[1] || 1) - 1, parts[0] || 1).getTime();
+    if (minTs === null || t < minTs) minTs = t;
+    if (maxTs === null || t > maxTs) maxTs = t;
+    const key = v.of || '—';
+    byOffer[key] = (byOffer[key] || 0) + pay(v.v, RATE[key] * levelMultForNick(x.c), v.k);
+  });
+  const fmtDate = (t) => (t == null ? '—' : new Date(t).toLocaleDateString('ru-RU'));
+  return {
+    idLine: x.c + ' · ID эдуграм ' + x.eid,
+    period: 'с ' + fmtDate(minTs) + ' по ' + fmtDate(maxTs),
+    projects: Object.keys(byOffer).map((of) => of + ' — ' + byOffer[of].toLocaleString('ru-RU') + ' ₽'),
+    total: x.s.toLocaleString('ru-RU') + ' ₽',
+    method: x.w === 'на карту' ? 'по СМЗ на карту' : x.w,
+  };
+}
+// Заявки, которые уже были «в работе» на момент старта сервера (тестовые
+// данные) или стали такими до подключения этого шаблона, иначе никогда не
+// получили бы template — сама заявка ставится в статус «в работе» только
+// один раз, и одноразовая простановка внутри /payouts/:id/action ловит
+// только переход В этот статус, а не «уже находится в нём». Пересчитываем
+// на каждое обращение, чтобы шаблон совпадал с реально привязанными
+// роликами, даже если разметка изменилась после того, как заявка ушла в работу.
+function recomputePayoutTemplates() {
+  PAYQ.forEach((x) => {
+    if (x.st === 'в работе') x.template = buildPayoutTemplate(x);
+  });
+  return PAYQ;
+}
 
 // =============================================================================
 // СТАВКИ — базовая ставка по офферу для «Ставок» + порог оплаты
@@ -227,11 +465,11 @@ let WEEK_THEME = {
 //           status, payout_id); balance — поле в таблице creators
 // =============================================================================
 let PAYQ = [
-  { id: 101, c: '@sochi_nat', eid: 629410, s: 31321, w: 'на карту', v: 0, d: 'сегодня, 11:20', st: 'новая' },
-  { id: 102, c: '@basuha220', eid: 628745, s: 12480, w: 'из ЛК SREDA', v: 9, d: 'вчера, 18:04', st: 'в работе' },
-  { id: 103, c: '@angelo4ek2003', eid: 629233, s: 7300, w: 'на карту', v: 5, d: '8 августа', st: 'выплачено' },
-  { id: 104, c: '@lovi_neuro', eid: 629512, s: 2150, w: 'на карту', v: 3, d: '5 августа', st: 'выплачено' },
-  { id: 105, c: '@frilans_aa', eid: 629688, s: 1040, w: 'на карту', v: 2, d: '4 августа', st: 'отклонена' },
+  { id: 101, c: '@sochi_nat', eid: 629410, s: 31321, w: 'на карту', v: 0, d: 'сегодня, 11:20', st: 'новая', viewed: false },
+  { id: 102, c: '@basuha220', eid: 628745, s: 12480, w: 'из ЛК SREDA', v: 9, d: 'вчера, 18:04', st: 'в работе', viewed: true },
+  { id: 103, c: '@angelo4ek2003', eid: 629233, s: 7300, w: 'на карту', v: 5, d: '8 августа', st: 'выплачено', viewed: true },
+  { id: 104, c: '@lovi_neuro', eid: 629512, s: 2150, w: 'на карту', v: 3, d: '5 августа', st: 'выплачено', viewed: true },
+  { id: 105, c: '@frilans_aa', eid: 629688, s: 1040, w: 'на карту', v: 2, d: '4 августа', st: 'отклонена', viewed: true },
 ];
 let WD = [
   { d: '22 июля', s: 8400, w: 'на карту', v: 3, st: 'выплачено', q: null },
@@ -268,12 +506,13 @@ const SCHOOL_MINE = {
 const SCHOOL_ADMIN = {
   started: 64, completed: 21, multiplier: '×3.4',
   courses: [
-    { name: 'ИИ Блогер: быстрый старт', started: 64, completed: 21, paid: 14 },
-    { name: 'AI-карточки для маркетплейсов', started: 28, completed: 9, paid: 7 },
-    { name: 'AI-музыка', started: 19, completed: 6, paid: 3 },
-    { name: 'SMM под ключ', started: 12, completed: 2, paid: 0 },
+    { id: 1, name: 'ИИ Блогер: быстрый старт', started: 64, completed: 21, paid: 14 },
+    { id: 2, name: 'AI-карточки для маркетплейсов', started: 28, completed: 9, paid: 7 },
+    { id: 3, name: 'AI-музыка', started: 19, completed: 6, paid: 3 },
+    { id: 4, name: 'SMM под ключ', started: 12, completed: 2, paid: 0 },
   ],
 };
+let schoolCourseAutoId = 5;
 
 // =============================================================================
 // СКАУТИНГ — «мои приведённые» (креатор) + «кто кого привёл» (админ)
@@ -309,10 +548,14 @@ const SCOUT_ADMIN = {
 //           budget, geo, contact_name, contact_tg, status, created_at)
 // =============================================================================
 let BRIEFS = [
-  { company: 'Кэмп', niche: 'Образование', model: 'RevShare', budget: '—', date: '3 авг', status: 'подключён' },
-  { company: 'Автор24', niche: 'Образование', model: 'Фикс', budget: '100 000 ₽', date: '1 авг', status: 'на модерации' },
-  { company: 'Studybay', niche: 'Образование', model: 'RevShare', budget: '—', date: '29 июл', status: 'новая' },
+  { id: 1, company: 'Кэмп', niche: 'Образование', model: 'RevShare', budget: '—', date: '3 авг', status: 'подключён',
+    site: '', message: '', geo: '', contactName: '', contactTg: '', note: '', viewed: true },
+  { id: 2, company: 'Автор24', niche: 'Образование', model: 'Фикс', budget: '100 000 ₽', date: '1 авг', status: 'на модерации',
+    site: '', message: '', geo: '', contactName: '', contactTg: '', note: '', viewed: true },
+  { id: 3, company: 'Studybay', niche: 'Образование', model: 'RevShare', budget: '—', date: '29 июл', status: 'новая',
+    site: '', message: '', geo: '', contactName: '', contactTg: '', note: '', viewed: false },
 ];
+let briefAutoId = 4;
 
 // =============================================================================
 // ОФФЕРЫ — админская таблица (модель/ставка/подключено/оплат/доступ по
@@ -320,25 +563,34 @@ let BRIEFS = [
 // у админа была отдельная более подробная таблица.
 // TODO(DB): вью offers_admin_summary
 // =============================================================================
-const ADMIN_OFFERS_TABLE = [
-  { offer: 'Study AI', model: 'RevShare', rate: '85% / 20% / 20%', perView: '0,15 ₽', connected: 212, paid: 150, access: 'всем' },
-  { offer: 'Кэмп', model: 'RevShare', rate: '70% / 30%', perView: '0,20 ₽', connected: 8, paid: null, access: 'с уровня 2' },
-  { offer: 'Кэмп', model: 'Фикс', rate: '300 ₽ / 100 ₽', perView: '0,20 ₽', connected: 8, paid: null, access: 'с уровня 2' },
-  { offer: 'Автор24', model: 'Фикс', rate: '2 000 ₽ за заказ', perView: '0,10 ₽', connected: 3, paid: null, access: 'с уровня 3' },
-  { offer: 'Автор24', model: 'RevShare', rate: '20% / 20%', perView: '0,10 ₽', connected: 3, paid: null, access: 'с уровня 3' },
-  { offer: 'Studybay', model: 'RevShare', rate: '60% / 15%', perView: '—', connected: 0, paid: null, access: 'скоро' },
+let ADMIN_OFFERS_TABLE = [
+  { id: 1, offer: 'Study AI', model: 'RevShare', rate: '85% / 20% / 20%', perView: '0,15 ₽', connected: 212, paid: 150, access: 'всем' },
+  { id: 2, offer: 'Кэмп', model: 'RevShare', rate: '70% / 30%', perView: '0,20 ₽', connected: 8, paid: null, access: 'с уровня 2' },
+  { id: 3, offer: 'Кэмп', model: 'Фикс', rate: '300 ₽ / 100 ₽', perView: '0,20 ₽', connected: 8, paid: null, access: 'с уровня 2' },
+  { id: 4, offer: 'Автор24', model: 'Фикс', rate: '2 000 ₽ за заказ', perView: '0,10 ₽', connected: 3, paid: null, access: 'с уровня 3' },
+  { id: 5, offer: 'Автор24', model: 'RevShare', rate: '20% / 20%', perView: '0,10 ₽', connected: 3, paid: null, access: 'с уровня 3' },
+  { id: 6, offer: 'Studybay', model: 'RevShare', rate: '60% / 15%', perView: '—', connected: 0, paid: null, access: 'скоро' },
 ];
+let adminOfferAutoId = 7;
 
 module.exports = {
   clone,
+  pay, fmtViews, ruPlural, ruDays, levelMultForNick,
   OFFERS, FORMATS, VIDEOS, CREATORS, LVN, LVG,
   get LVM() { return LVM; }, set LVM(v) { LVM = v; },
   MYNICK, MYEID,
+  levelForPaymentsCount, recalcCreatorLevel, recalcAllLevels,
   get MOD() { return MOD; }, set MOD(v) { MOD = v; },
   get modAutoId() { return modAutoId; }, set modAutoId(v) { modAutoId = v; },
+  get doneAutoId() { return doneAutoId; }, set doneAutoId(v) { doneAutoId = v; },
   get RATE() { return RATE; }, set RATE(v) { RATE = v; },
   get DONE() { return DONE; }, set DONE(v) { DONE = v; },
-  TOP_VIDEOS, CONTESTS, CONTESTS_ADMIN_SUMMARY,
+  TOP_VIDEOS,
+  get CONTESTS() { return CONTESTS; }, set CONTESTS(v) { CONTESTS = v; },
+  get CONTESTS_ADMIN_SUMMARY() { return CONTESTS_ADMIN_SUMMARY; }, set CONTESTS_ADMIN_SUMMARY(v) { CONTESTS_ADMIN_SUMMARY = v; },
+  get contestAutoId() { return contestAutoId; }, set contestAutoId(v) { contestAutoId = v; },
+  metricUnit, metricLabel, fmtMetricValue, recomputeContests, computeContestBoard,
+  buildPayoutTemplate, recomputePayoutTemplates,
   get RATES() { return RATES; }, set RATES(v) { RATES = v; },
   get MIN_VIEWS() { return MIN_VIEWS; }, set MIN_VIEWS(v) { MIN_VIEWS = v; },
   get WEEK_THEME() { return WEEK_THEME; }, set WEEK_THEME(v) { WEEK_THEME = v; },
@@ -347,6 +599,9 @@ module.exports = {
   get BAL() { return BAL; }, set BAL(v) { BAL = v; },
   get NOTIF() { return NOTIF; }, set NOTIF(v) { NOTIF = v; },
   SCHOOL_MINE, SCHOOL_ADMIN, SCOUT_MINE, SCOUT_ADMIN,
+  get schoolCourseAutoId() { return schoolCourseAutoId; }, set schoolCourseAutoId(v) { schoolCourseAutoId = v; },
   get BRIEFS() { return BRIEFS; }, set BRIEFS(v) { BRIEFS = v; },
-  ADMIN_OFFERS_TABLE,
+  get briefAutoId() { return briefAutoId; }, set briefAutoId(v) { briefAutoId = v; },
+  get ADMIN_OFFERS_TABLE() { return ADMIN_OFFERS_TABLE; }, set ADMIN_OFFERS_TABLE(v) { ADMIN_OFFERS_TABLE = v; },
+  get adminOfferAutoId() { return adminOfferAutoId; }, set adminOfferAutoId(v) { adminOfferAutoId = v; },
 };
