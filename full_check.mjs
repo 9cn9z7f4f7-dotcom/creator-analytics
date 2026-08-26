@@ -111,6 +111,7 @@ await page.click('[data-r="client"]');
 await page.waitForTimeout(300);
 await page.fill('#brCompany', 'PW Test Co');
 await page.fill('#brName', 'Плейрайт Тестов');
+await page.fill('#brTg', '@pwtest');
 await page.selectOption('#brNiche', { index: 1 });
 await page.click('button:has-text("Отправить бриф")');
 await page.waitForTimeout(400);
