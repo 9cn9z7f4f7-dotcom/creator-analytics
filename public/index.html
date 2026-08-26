@@ -1093,9 +1093,14 @@
   </div>
 
   <div class="pg" id="p-c-home">
-    <h1 id="cName">@marsedzhan</h1>
+    <h1 id="cName">Мой кабинет</h1>
     <p class="sub" id="cSub">ID 629398 · 8 июля — 7 августа</p>
     <div class="perbar perslot"></div>
+
+    <div class="lvl" id="nameCard" style="display:none;">
+      <div class="bdg" style="background:linear-gradient(140deg,#AEC23E,var(--lime));color:#241F2E;"><i class="ti ti-user"></i></div>
+      <div class="tx" id="nameCardBody"></div>
+    </div>
 
     <div class="lvl">
       <div class="bdg"><i class="ti ti-award"></i></div>
@@ -1342,7 +1347,7 @@
     </div>
     <div class="filters" id="crFilters"></div>
     <div class="box"><div class="scroll"><table class="dt">
-      <thead><tr><th>Ник</th><th>ID</th><th>Ур.</th><th>Охваты</th><th>ER</th><th>За просмотры</th>
+      <thead><tr><th>Ник</th><th>Имя</th><th>ID</th><th>Ур.</th><th>Охваты</th><th>ER</th><th>За просмотры</th>
       <th class="hi">Рефка</th><th class="hi">Промокод</th><th class="hi">Итого</th></tr></thead>
       <tbody id="tb"></tbody>
     </table></div></div>
@@ -1768,7 +1773,7 @@
   <div class="tf">
     <span class="tc" id="tourC">1 / 9</span>
     <button class="tskip" onclick="tourEnd()">Пропустить</button>
-    <button class="btn p" onclick="tourNext()" id="tourNextBtn">Дальше</button>
+    <button class="btn p" onclick="tourAdvance()" id="tourNextBtn">Дальше</button>
   </div>
 </div>
 
@@ -1847,7 +1852,7 @@ function go(v){
 function openCreator(nick){
   asCreator=nick;
   const d=D.find(x=>x.n===nick);
-  document.getElementById('asWho').textContent=nick;
+  document.getElementById('asWho').textContent=(d&&d.name)?(d.name+' ('+nick+')'):nick;
   fillCreator(d);
   go('creator');
   document.getElementById('backbar').style.display='block';
@@ -2032,8 +2037,9 @@ function applyLevelChange(lc){
 }
 
 function fillCreator(d){
- document.getElementById('cName').textContent=d.n;
+ document.getElementById('cName').textContent=d.name||'Мой кабинет';
  document.getElementById('cSub').textContent='ID '+d.id+' · 8 июля — 7 августа';
+ drawNameCard(d);
  const tp=d.pays, goal=LVG[d.lv], left=Math.max(0,goal-tp);
  document.getElementById('cLvl').textContent='Уровень '+d.lv+' · '+LVN[d.lv];
  const rNow=(0.15*LVM[d.lv]).toFixed(3).replace(/0$/,'').replace('.',',');
@@ -2077,6 +2083,64 @@ function card(col,ic,hi,n,s,l){
  '<div class="n">'+n+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'<div class="l">'+l+'</div></div>';
 }
 
+/* ===== ИМЯ КРЕАТОРА =====
+   Ник в Telegram (d.n) остаётся служебным полем — виден только админу
+   (таблица «Креаторы» и плашка «Смотрите кабинет глазами креатора»).
+   Креаторы видят друг друга по имени, которое каждый указывает сам при
+   первом входе — см. плашку ниже и последний шаг подсказок (TOUR). */
+function suggestNameFromNick(nick){
+ const raw=String(nick||'').replace(/^@/,'');
+ const m=raw.match(/^[a-zA-Zа-яёА-ЯЁ]+/);
+ let base=m?m[0]:'';
+ if(base.length<3) base=raw.replace(/[^a-zA-Zа-яёА-ЯЁ]/g,'');
+ if(!base) return '';
+ if(base.length>6) base=base.slice(0,4);
+ return base.charAt(0).toUpperCase()+base.slice(1).toLowerCase();
+}
+function displayName(nick){
+ const c=D.find(x=>x.n===nick);
+ return (c&&c.name)?c.name:nick;
+}
+let nameEditOn=false;
+function drawNameCard(d){
+ const elCard=document.getElementById('nameCard'); if(!elCard||!d) return;
+ const body=document.getElementById('nameCardBody');
+ const canEdit=!asCreator||asCreator===MYNICK;
+ elCard.style.display='flex';
+ if(d.name && !nameEditOn){
+  body.innerHTML='<b>Твоё имя: '+escHtml(d.name)+'</b><p>Под этим именем тебя видят другие креаторы — в топах и рейтингах. Ник в Telegram виден только команде SREDA</p>'+
+   (canEdit?'<button class="btn" style="padding:5px 11px;font-size:12px;" onclick="nameEditOn=true;drawNameCard(D.find(x=>x.n===\''+d.n+'\'))"><i class="ti ti-pencil"></i>Изменить</button>':'');
+  return;
+ }
+ if(!canEdit){
+  body.innerHTML='<b>Имя ещё не указано</b><p>Креатор увидит просьбу указать имя при своём следующем входе</p>';
+  return;
+ }
+ const suggestion=suggestNameFromNick(d.n);
+ body.innerHTML='<b>Укажи своё имя!</b><p>Под этим именем тебя увидят другие креаторы вместо ника в Telegram</p>'+
+  '<div class="row" style="margin:10px 0 0;"><input id="nmInput" placeholder="'+(suggestion?'Например, '+escHtml(suggestion):'Как тебя называть?')+'" style="background:#fff;color:var(--text);" value="'+escHtml(d.name||'')+'">'+
+  '<button class="btn p" onclick="saveName()"><i class="ti ti-check"></i>Сохранить</button>'+
+  (d.name?'<button class="btn" onclick="nameEditOn=false;drawNameCard(D.find(x=>x.n===\''+d.n+'\'))">Отмена</button>':'')+'</div>'+
+  (suggestion?'<div style="font-size:12px;color:var(--text-2);margin-top:8px;">Твой Telegram — <b>'+escHtml(d.n)+'</b>. Подсказка: <a href="#" onclick="document.getElementById(\'nmInput\').value=\''+escHtml(suggestion)+'\';return false;" style="color:var(--violet)">использовать «'+escHtml(suggestion)+'»</a></div>':'')+
+  '<div id="nmErr" style="color:#D64545;font-size:12px;margin-top:6px;display:none;"></div>';
+}
+function saveName(){
+ const input=document.getElementById('nmInput'); if(!input) return;
+ const name=input.value.trim();
+ const err=document.getElementById('nmErr');
+ if(!name){ if(err){err.textContent='Введи имя';err.style.display='block';} return; }
+ fetch('/api/creators/me/name',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ if(err){err.textContent=d.error||'Не удалось сохранить имя';err.style.display='block';} return; }
+   D=d.creators; nameEditOn=false;
+   const me=D.find(x=>x.n===MYNICK);
+   fillCreator(me); drawDash(); r();
+   t('Имя сохранено');
+  })
+  .catch(()=>{ if(err){err.textContent='Не удалось сохранить имя — попробуй ещё раз';err.style.display='block';} });
+}
+
 const FLT=[
  ['all','Все',()=>true],
  ['noid','Без ID эдуграма',d=>!d.id],
@@ -2111,7 +2175,9 @@ function curList(){
 function r(){
  drawFilters();
  document.getElementById('tb').innerHTML=curList().map(d=>
-  '<tr class="clk" onclick="openCreator(\''+d.n+'\')"><td style="color:var(--violet);font-weight:500">'+d.n+'</td><td style="color:var(--text-muted)">'+d.id+'</td><td><span class="tag m">'+d.lv+'</span></td>'+
+  '<tr class="clk" onclick="openCreator(\''+d.n+'\')"><td style="color:var(--violet);font-weight:500">'+d.n+'</td>'+
+  '<td>'+(d.name?escHtml(d.name):'<span class="zero">не указано</span>')+'</td>'+
+  '<td style="color:var(--text-muted)">'+d.id+'</td><td><span class="tag m">'+d.lv+'</span></td>'+
   '<td data-l="Ник">'+d.r+'</td><td>'+d.e+'</td><td class="'+cl(d.v)+'">'+m(d.v)+'</td>'+
   '<td data-l="ID" class="hi '+cl(d.f)+'">'+m(d.f)+'</td><td class="hi '+cl(d.p)+'">'+m(d.p)+'</td>'+
   '<td data-l="Ур." class="hi" style="font-weight:600">'+m(d.v+d.f+d.p)+'</td></tr>').join('');
@@ -2218,7 +2284,7 @@ function drawDash(){
   const pl=PLC[x.p], me=x.c==='@marsedzhan';
   return '<tr'+(me?' style="background:#FCFAFF"':'')+'>'+
   '<td data-l="#" style="color:'+(i<3?'#F5B301;font-weight:600':'var(--text-muted)')+'">'+(i+1)+'</td>'+
-  '<td data-l="Креатор"'+(me?' style="font-weight:600"':'')+'>'+x.c+(me?' <span class="tag v">ты</span>':'')+'</td>'+
+  '<td data-l="Креатор"'+(me?' style="font-weight:600"':'')+'>'+escHtml(displayName(x.c))+(me?' <span class="tag v">ты</span>':'')+'</td>'+
   '<td data-l="Соцсеть"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i>'+pl[2]+'</span></td>'+
   '<td data-l="Оффер">'+(x.of==='—'?'<span class="zero">не размечен</span>':'<span class="tag v">'+x.of+'</span>')+'</td>'+
   '<td data-l="Просмотры" style="font-weight:500">'+fmt(x.v)+'</td><td>'+x.lk+'</td><td>'+x.er+'</td>'+
@@ -2230,7 +2296,7 @@ function drawDash(){
   const me=d.n==='@marsedzhan';
   return '<tr'+(me?' style="background:#FCFAFF"':'')+'>'+
   '<td data-l="#" style="color:'+(i<3?'#F5B301;font-weight:600':'var(--text-muted)')+'">'+(i+1)+'</td>'+
-  '<td data-l="Креатор" style="font-weight:'+(me?600:400)+'">'+d.n+(me?' <span class="tag v">ты</span>':'')+'</td>'+
+  '<td data-l="Креатор" style="font-weight:'+(me?600:400)+'">'+escHtml(d.name||d.n)+(me?' <span class="tag v">ты</span>':'')+'</td>'+
   '<td data-l="Ур."><span class="tag m">'+d.lv+'</span></td>'+
   '<td data-l="Охваты">'+d.r+'</td><td>'+d.e+'</td><td>'+d.ct+'</td>'+
   '<td data-l="ER" style="font-weight:600">'+(d.pays||'—')+'</td></tr>';
@@ -2373,7 +2439,7 @@ function ctOpen(id){
  document.getElementById('ctdRules').querySelector('div').textContent=c.d;
  document.getElementById('ctdBoard').innerHTML=c.board.map((b,i)=>
   '<div class="lb'+(b[0]==='@marsedzhan'?' me':'')+'"><div class="pos'+(i<3?' t':'')+'">'+(i+1)+'</div>'+
-  '<div class="nm">'+b[0]+(b[0]==='@marsedzhan'?' <span class="tag v" style="margin-left:6px;">это ты</span>':'')+'</div>'+
+  '<div class="nm">'+escHtml(displayName(b[0]))+(b[0]==='@marsedzhan'?' <span class="tag v" style="margin-left:6px;">это ты</span>':'')+'</div>'+
   '<div class="val">'+b[1]+'</div></div>').join('');
  document.getElementById('ctdPrizes').innerHTML=c.prizes.map(p=>
   '<div class="prz"><span>'+p[0]+'</span><b>'+p[1]+'</b></div>').join('');
@@ -2489,6 +2555,7 @@ const TOUR=[
  {sel:'[data-p="p-c-school"]',go:'p-c-school',t:'Школа',d:'Девять бесплатных курсов. Прошёл — открываются закрытые офферы и повышенный коэффициент.'},
  {sel:'[data-p="p-c-scout"]',go:'p-c-scout',t:'Скаутинг',d:'Приводишь креатора — получаешь 5% с его продаж каждый месяц, пока он работает.'},
  {sel:'.navsoc a',go:'p-c-dash',t:'Чат креаторов',d:'Живой чат на 162 человека. Вопросы, разборы и помощь — сюда. Удачи!'},
+ {sel:null,go:'p-c-home',t:'Укажи своё имя!',d:'Под этим именем тебя увидят другие креаторы вместо ника в Telegram — в топах, рейтингах и конкурсах. Ник останется только у команды SREDA.',nameStep:true},
 ];
 let ti=0, tourOn=false, pendingTour=false;
 function tourStart(){
@@ -2503,14 +2570,14 @@ function tourShow(){
  document.getElementById('tourT').textContent=s.t;
  document.getElementById('tourD').textContent=s.d;
  document.getElementById('tourC').textContent=(ti+1)+' / '+TOUR.length;
- document.getElementById('tourNextBtn').textContent=ti===TOUR.length-1?'Понятно':'Дальше';
+ document.getElementById('tourNextBtn').textContent=s.nameStep?'Сохранить и начать':(ti===TOUR.length-1?'Понятно':'Дальше');
  tip.style.display='block';
  const el=s.sel?document.querySelector(s.sel):null;
  const dim=document.getElementById('tourDim');
  const art=document.getElementById('tourArt');
- art.innerHTML = s.art || '';
- art.style.display = s.art ? 'block' : 'none';
- tip.classList.toggle('wide', !!s.art);
+ art.innerHTML = s.nameStep ? tourNameStepHtml() : (s.art || '');
+ art.style.display = (s.art||s.nameStep) ? 'block' : 'none';
+ tip.classList.toggle('wide', !!(s.art||s.nameStep));
  if(s.sel && !el){ tourNext(); return; }   // элемента нет — не показываем пустой шаг
  if(!el){                                   // вступительный экран: затемняем всё и показываем крупную карточку
   ring.style.display='none';
@@ -2536,6 +2603,39 @@ function tourShow(){
  },60);
 }
 function tourNext(){ ti++; if(ti>=TOUR.length) tourEnd(); else tourShow(); }
+/* Финальный шаг тура — просьба указать имя (см. TOUR, nameStep:true).
+   Кнопка «Дальше»/«Понятно» на этом шаге вызывает tourAdvance(), а не
+   tourNext() напрямую: сперва нужно сохранить имя на бекенде и только
+   при успехе продвинуть тур дальше (тур на этом шаге последний, так что
+   дальше — tourEnd()). */
+function tourNameStepHtml(){
+ const me=D.find(x=>x.n===MYNICK);
+ const suggestion=suggestNameFromNick(MYNICK);
+ return '<div class="row" style="margin:0 0 10px;"><input id="tourNmInput" placeholder="'+(suggestion?'Например, '+escHtml(suggestion):'Как тебя называть?')+'" style="background:#fff;color:var(--text);" value="'+(me&&me.name?escHtml(me.name):'')+'"></div>'+
+  (suggestion?'<div style="font-size:12.5px;color:var(--text-2);margin-bottom:6px;">Твой Telegram — <b>'+escHtml(MYNICK)+'</b>. Подсказка: <a href="#" onclick="document.getElementById(\'tourNmInput\').value=\''+escHtml(suggestion)+'\';return false;" style="color:var(--violet)">использовать «'+escHtml(suggestion)+'»</a></div>':'')+
+  '<div id="tourNmErr" style="color:#D64545;font-size:12.5px;display:none;"></div>';
+}
+function tourAdvance(){
+ const s=TOUR[ti];
+ if(s && s.nameStep){ tourSaveNameAndAdvance(); return; }
+ tourNext();
+}
+function tourSaveNameAndAdvance(){
+ const input=document.getElementById('tourNmInput'); if(!input) return;
+ const name=input.value.trim();
+ const err=document.getElementById('tourNmErr');
+ if(!name){ if(err){err.textContent='Введи имя, чтобы продолжить';err.style.display='block';} return; }
+ fetch('/api/creators/me/name',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ if(err){err.textContent=d.error||'Не удалось сохранить имя';err.style.display='block';} return; }
+   D=d.creators; nameEditOn=false;
+   const me=D.find(x=>x.n===MYNICK);
+   fillCreator(me); drawDash(); r();
+   tourNext();
+  })
+  .catch(()=>{ if(err){err.textContent='Не удалось сохранить — попробуй ещё раз';err.style.display='block';} });
+}
 /* просто спрятать — без отметки «пройден» */
 function tourHide(){
  tourOn=false; ti=0;
