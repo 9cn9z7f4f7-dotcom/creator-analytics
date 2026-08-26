@@ -178,6 +178,26 @@ router.post('/creators/me/name', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// ПОЧТА КРЕАТОРА (админ) — нигде в системе не собирается сама, админ вписывает
+// её вручную один раз (например, увидев пропуск в шаблоне для выплаты — см.
+// buildPayoutTemplate в store.js), дальше она подставляется во все шаблоны
+// выплат этого креатора сама. В отличие от имени — доступно для любого
+// креатора в базе, не только MYNICK: заявки на выплату бывают от разных
+// креаторов (см. PAYQ), это не «личное» действие вроде разметки видео.
+// ---------------------------------------------------------------------------
+router.patch('/creators/:nick/email', (req, res) => {
+  const nick = decodeURIComponent(req.params.nick);
+  const creator = store.CREATORS.find((c) => c.n === nick);
+  if (!creator) return res.status(404).json({ error: 'Креатор не найден' });
+  const raw = String((req.body && req.body.email) || '').trim();
+  if (!raw) return res.status(400).json({ error: 'Введите email' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) return res.status(400).json({ error: 'Похоже, это не email' });
+  creator.email = raw;
+  const payouts = store.recomputePayoutTemplates();
+  res.json({ creators: store.CREATORS, payouts });
+});
+
+// ---------------------------------------------------------------------------
 // ОЧЕРЕДЬ ПРОВЕРКИ РОЛИКОВ (админ)
 // ---------------------------------------------------------------------------
 router.get('/moderation', (req, res) => res.json(store.MOD));
