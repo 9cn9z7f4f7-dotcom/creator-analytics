@@ -63,6 +63,30 @@ function ruPlural(n, one, few, many) {
 function ruDays(n) {
   return ruPlural(n, 'день', 'дня', 'дней');
 }
+// Подсказка имени по нику в Telegram — используется при первом входе
+// креатора, когда он ещё не выбрал отображаемое имя (см. CREATORS.name
+// ниже и POST /creators/me/name в api.js). Правило простое и предсказуемое:
+// берём буквенный кусок ника до первого разделителя (цифры/подчёркивание/
+// точка); если он короче 3 букв (типа «a11esey») — берём все буквы ника
+// целиком; если получилось длиннее 6 букв — оставляем первые 4 (короткое
+// имя выглядит естественнее, чем обрезок ника целиком). Это ТОЛЬКО
+// подсказка в поле ввода — креатор может стереть её и написать своё имя.
+function suggestNameFromNick(nick) {
+  const raw = String(nick || '').replace(/^@/, '');
+  const m = raw.match(/^[a-zA-Zа-яёА-ЯЁ]+/);
+  let base = m ? m[0] : '';
+  if (base.length < 3) base = raw.replace(/[^a-zA-Zа-яёА-ЯЁ]/g, '');
+  if (!base) return '';
+  if (base.length > 6) base = base.slice(0, 4);
+  return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
+}
+// Занято ли имя другим креатором (сравнение без учёта регистра/пробелов
+// по краям) — имена должны быть уникальны, см. POST /creators/me/name.
+function isNameTaken(name, exceptNick) {
+  const norm = String(name || '').trim().toLowerCase();
+  if (!norm) return false;
+  return CREATORS.some((c) => c.n !== exceptNick && String(c.name || '').trim().toLowerCase() === norm);
+}
 
 // =============================================================================
 // ОФФЕРЫ — то, что видит креатор на вкладке «Офферы»
@@ -133,6 +157,18 @@ const CREATORS = [
   { n: '@lovi_neuro', id: 628952, lv: 1, r: '593.2K', ct: 148, lk: '8K', cm: '343', e: '1.40%', v: 3857, f: 0, p: 0, sc: 0, pays: 0, code: 'LOVI' },
   { n: '@tanya_createss', id: 628971, lv: 1, r: '7.65M', ct: 17, lk: '274.9K', cm: '1.9K', e: '3.62%', v: 248, f: 0, p: 0, sc: 0, pays: 0, code: '—' },
 ];
+// Отображаемое имя — креатор выбирает его сам при первом входе в личный
+// кабинет (см. TOUR/namecard во фронте и POST /creators/me/name ниже).
+// Ник в Telegram (n) остаётся служебным идентификатором и виден только
+// админу — креаторы видят друг друга по этому имени (топы, лидерборды).
+// null = ещё не выбрано. У @marsedzhan (единственный креатор, за которого
+// реально «заходят» в прототипе) имя намеренно не задано — это и есть
+// демонстрация экрана «укажи своё имя» при первом входе. Остальным девяти
+// имя подставлено автоматически (как будто они прошли этот шаг раньше),
+// чтобы таблица у админа и лидерборды выглядели естественно.
+CREATORS.forEach((c) => {
+  c.name = c.n === '@marsedzhan' ? null : suggestNameFromNick(c.n);
+});
 
 const LVN = { 1: 'Новичок', 2: 'Активный', 3: 'Профи', 4: 'Топ' };
 const LVG = { 1: 30, 2: 60, 3: 100, 4: 100 }; // оплат за последние 30 дней
@@ -576,6 +612,7 @@ let adminOfferAutoId = 7;
 module.exports = {
   clone,
   pay, fmtViews, ruPlural, ruDays, levelMultForNick,
+  suggestNameFromNick, isNameTaken,
   OFFERS, FORMATS, VIDEOS, CREATORS, LVN, LVG,
   get LVM() { return LVM; }, set LVM(v) { LVM = v; },
   MYNICK, MYEID,
