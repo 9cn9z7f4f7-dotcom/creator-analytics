@@ -259,7 +259,7 @@ router.post('/payouts/:id/action', (req, res) => {
     const w = store.WD.find((z) => z.q === id);
     if (w) w.st = 'выплачено';
     if (x.c === store.MYNICK) {
-      notif = pushNotif('money', 'Выплата отправлена', x.s.toLocaleString('ru-RU') + ' ₽ ушли ' + (x.w === 'на карту' ? 'на карту' : 'на баланс Edugram') + '. Проверьте поступление.');
+      notif = pushNotif('money', 'Выплата отправлена', x.s.toLocaleString('ru-RU') + ' ₽ ушли ' + (x.w === 'на карту' ? 'на карту' : 'на баланс SREDA') + '. Проверьте поступление.');
     }
   } else if (status === 'отклонена') {
     const w = store.WD.find((z) => z.q === id);
@@ -288,7 +288,7 @@ router.get('/withdrawals', (req, res) => res.json({ withdrawals: store.WD, balan
 router.post('/withdrawals', (req, res) => {
   if (store.BAL < 1000) return res.status(400).json({ error: 'Минимальная сумма вывода — 1 000 ₽' });
   const { method } = req.body || {};
-  const way = method === 'edu' ? 'из ЛК Edugram' : 'на карту';
+  const way = method === 'edu' ? 'из ЛК SREDA' : 'на карту';
   const paidVideos = store.VIDEOS.filter((x) => x.st === 'ok' && !x.wd);
   const qid = wdAutoId++;
   paidVideos.forEach((x) => { x.wd = qid; });
