@@ -1,0 +1,16 @@
+{
+  "name": "creator-analytics",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Прототип Creator Analytics + лёгкий бекенд (без БД, тестовые данные в памяти)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
