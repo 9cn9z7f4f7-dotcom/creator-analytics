@@ -1,0 +1,2926 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Analytics — прототип</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<style>
+  :root{
+    --page:#F3F0FA; --border:#E9E4F3; --text:#241F2E; --text-2:#7A7684; --text-muted:#A8A3B5;
+    --lime:#DFEF95; --vd:#33285C; --vd2:#432F7A;
+    --card:#fff; --rd:20px; --rd-s:14px;
+    --sh:0 2px 10px rgba(36,31,46,.05); --sh-h:0 10px 28px rgba(36,31,46,.10);
+    --violet:#7E63D6; --violet-bg:#F3EFFC; --violet-d:#6B52C0;
+    --blue:#5A8FDD; --blue-bg:#EDF3FD;
+    --green:#3E9E63; --green-bg:#EBF7F0;
+    --amber:#C9922F; --amber-bg:#FCF5E8;
+    --pink:#D06B9F; --pink-bg:#FBF0F6;
+    --red:#CF5252; --red-bg:#FBEDED;
+  }
+  html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:rgba(36,31,46,.24) transparent;}
+  ::-webkit-scrollbar{width:11px;height:11px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background-color:rgba(36,31,46,.22);border-radius:99px;
+    border:3px solid transparent;background-clip:content-box;transition:background-color .2s;}
+  ::-webkit-scrollbar-thumb:hover{background-color:rgba(36,31,46,.40);background-clip:content-box;}
+  ::-webkit-scrollbar-corner{background:transparent;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--page);color:var(--text);}
+  a{color:inherit;}
+
+  header{background:rgba(243,240,250,.72);backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(36,31,46,.07);position:sticky;top:0;z-index:30;}
+  .hin{max-width:1200px;margin:0 auto;padding:14px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .logo{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;white-space:nowrap;cursor:pointer;}
+  .logo i{color:var(--violet);font-size:20px;}
+  .logo .egl{height:22px;width:auto;display:block;flex-shrink:0;}
+  .logo .lsep{width:1px;height:17px;background:var(--border);display:block;margin:0 1px;}
+  .hr{display:flex;align-items:center;gap:10px;}
+  .chip{font-size:12.5px;padding:6px 14px;border-radius:999px;background:var(--violet-bg);color:var(--violet);font-weight:600;}
+  .exit{font-size:13px;color:var(--text-2);display:flex;align-items:center;gap:6px;cursor:pointer;
+    padding:7px 13px;border-radius:999px;transition:background .18s,color .18s;}
+  .exit:hover{background:rgba(126,99,214,.10);color:var(--text);}
+
+  nav{background:transparent;border-bottom:1px solid rgba(36,31,46,.06);}
+  .nin{max-width:1200px;margin:0 auto;padding:9px 26px;display:flex;gap:3px;overflow-x:auto;align-items:center;}
+  .nin button{border:none;background:none;font-size:13.5px;padding:9px 14px;border-radius:999px;cursor:pointer;
+    color:var(--text-2);font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:7px;
+    transition:background .18s,color .18s;}
+  .nin button:hover{background:rgba(126,99,214,.09);color:var(--text);}
+  .nin button.on{color:#fff;background:var(--violet);font-weight:600;box-shadow:0 3px 12px rgba(126,99,214,.28);}
+  .nin button.on:hover{background:var(--violet-d);color:#fff;}
+  .nin button i{font-size:16px;}
+  .nin .navsoc{margin-left:auto;display:flex;gap:7px;align-items:center;padding:7px 0;}
+  .nin .navsoc a{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);text-decoration:none;padding:7px 12px;border-radius:999px;white-space:nowrap;transition:background .18s,color .18s;}
+  .nin .navsoc a:hover{background:rgba(126,99,214,.09);color:var(--text);}
+  .nin .navsoc a i{font-size:15px;}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:26px 26px 80px;}
+  h1{font-size:23px;font-weight:700;letter-spacing:-.6px;margin:0 0 4px;}
+  .sub{font-size:13.5px;color:var(--text-2);margin:0 0 22px;}
+  h2{font-size:14.5px;font-weight:700;letter-spacing:-.2px;margin:28px 0 12px;}
+
+  /* ===== ЛЕНДИНГ ===== */
+  .lp{--v:#7E63D6;--v2:#B7A2F0;--vl:#F3EFFC;--ink:#241F2E;--lime:#DFEF95;--lime-s:#EAF6B8;--gray:#7A7684;--bg:#F3F0FA;--vd:#33285C;--vd2:#432F7A;--r:24px;}
+  .lp *{box-sizing:border-box;}
+  .lp{background:var(--bg);color:var(--ink);}
+  .lwrap{max-width:1200px;margin:0 auto;padding:0 20px;position:relative;}
+  .lp ::selection{background:var(--lime);color:var(--ink);}
+
+  .lhead{position:sticky;top:0;z-index:20;margin-bottom:-66px;background:transparent;
+    border-bottom:1px solid transparent;
+    transition:background .3s ease,backdrop-filter .3s ease,border-color .3s ease;}
+  .lhead.stuck{background:rgba(243,240,250,.7);
+    backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom-color:rgba(36,31,46,.08);}
+  .lhin{display:flex;align-items:center;gap:22px;padding-top:14px;padding-bottom:14px;min-height:66px;}
+  .lbrand{display:flex;align-items:center;gap:11px;cursor:pointer;flex-shrink:0;}
+  .lbrand .egl2{height:23px;width:auto;display:block;}
+  .lbrand .sep2{width:1px;height:17px;background:rgba(36,31,46,.18);display:block;}
+  .lbrand b{font-size:14px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;}
+  .lnav{display:flex;gap:2px;margin-left:auto;}
+  .lnav a{font-size:13.5px;font-weight:600;color:var(--gray);text-decoration:none;padding:8px 13px;
+    border-radius:999px;white-space:nowrap;transition:color .18s,background .18s;background:none;}
+  .lnav a:hover{color:var(--ink);background:rgba(126,99,214,.10);}
+  .lhcta{display:flex;gap:6px;flex-shrink:0;align-items:center;}
+  .lhbtn{border:none;background:transparent;border-radius:999px;padding:9px 15px;
+    font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--gray);
+    transition:color .18s,background .18s,transform .18s,box-shadow .18s;white-space:nowrap;}
+  .lhbtn:not(.p):hover{color:var(--ink);}
+  .lhbtn:hover{background:rgba(126,99,214,.10);}
+  .lhbtn.p{background:var(--v);color:#fff;font-weight:700;padding:10px 20px;box-shadow:0 4px 14px rgba(126,99,214,.26);}
+  .lhbtn.p:hover{background:var(--ink);box-shadow:0 6px 18px rgba(36,31,46,.24);transform:translateY(-1px);}
+  .lhbtn:active{transform:scale(.97);}
+  @media(max-width:900px){ .lnav{display:none;} .lhin{gap:12px;} .lhcta .lhbtn:not(.p){display:none;} }
+
+  .pill{display:inline-flex;align-items:center;gap:8px;border:1.5px solid rgba(126,99,214,.32);border-radius:999px;
+    padding:8px 17px;font-size:13px;font-weight:600;background:#fff;white-space:nowrap;color:var(--ink);}
+  .pill.vio{background:var(--v);color:#fff;border-color:var(--v);}
+  .pill .dotl{width:8px;height:8px;border-radius:50%;background:var(--v);flex-shrink:0;
+    animation:pulse 1.8s ease-in-out infinite;}
+  .pill.vio .px{background:var(--lime);box-shadow:3px 0 0 var(--lime),0 3px 0 var(--lime),3px 3px 0 var(--lime);}
+  .pill.lime{background:var(--lime);border-color:var(--ink);}
+  .pill.dark{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .sup{font-size:10px;vertical-align:super;opacity:.5;font-weight:700;margin-left:2px;}
+  .px{width:8px;height:8px;background:var(--ink);box-shadow:3px 0 0 var(--ink),0 3px 0 var(--ink),3px 3px 0 var(--ink);transform:scale(.85);flex-shrink:0;}
+  .pill.dark .px,.pill.lime .px{background:var(--v);box-shadow:3px 0 0 var(--v),0 3px 0 var(--v),3px 3px 0 var(--v);}
+  .arrb{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--ink);background:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;transition:.15s;flex-shrink:0;}
+  .arrb:hover{background:var(--lime);transform:rotate(45deg);}
+
+  /* ГЕРОЙ */
+  .hero{padding:66px 0 10px;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,#EFE8FD 0%,#EDE6FC 45%,#F3F0FA 100%);}
+  .blob{position:absolute;border-radius:50%;filter:blur(72px);pointer-events:none;
+    animation:drift 16s ease-in-out infinite;}
+  .b1{width:320px;height:300px;background:rgba(140,105,232,.55);top:-50px;left:-80px;}
+  .b2{width:250px;height:240px;background:rgba(223,239,149,.55);top:170px;left:-20px;animation-delay:-5s;animation-duration:19s;}
+  .b3{width:230px;height:220px;background:rgba(167,138,240,.48);top:340px;left:70px;animation-delay:-9s;animation-duration:22s;}
+  .b4{width:320px;height:300px;background:rgba(140,105,232,.55);top:-50px;right:-80px;animation-delay:-3s;animation-duration:18s;}
+  .b5{width:250px;height:240px;background:rgba(223,239,149,.5);top:210px;right:-30px;animation-delay:-12s;animation-duration:21s;}
+  .b6{width:230px;height:220px;background:rgba(167,138,240,.48);top:360px;right:60px;animation-delay:-7s;animation-duration:20s;}
+  @keyframes drift{
+    0%,100%{transform:translate3d(0,0,0) scale(1);}
+    33%{transform:translate3d(24px,16px,0) scale(1.08);}
+    66%{transform:translate3d(-16px,10px,0) scale(.95);}
+  }
+
+  .hcenter{position:relative;z-index:1;text-align:center;padding:44px 0 30px;
+    display:flex;flex-direction:column;align-items:center;}
+  .hbadges{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:26px;}
+  .hero h1{font-size:60px;line-height:1.06;margin:0 0 20px;font-weight:800;letter-spacing:-2.4px;max-width:900px;}
+  .hero h1 .vt{color:var(--v);}
+  .hero h1 .hl{display:inline-block;background:var(--lime);border-radius:999px;padding:1px 20px 5px;}
+  .hero .sub2{font-size:18px;line-height:1.55;color:var(--gray);margin:0 0 28px;max-width:640px;}
+  .hcta{display:flex;gap:11px;flex-wrap:wrap;align-items:center;justify-content:center;margin-bottom:20px;}
+  .bigb{border:1.5px solid var(--ink);border-radius:999px;padding:15px 30px;font-size:15.5px;font-weight:700;cursor:pointer;
+    font-family:inherit;display:inline-flex;align-items:center;gap:9px;transition:.15s;text-decoration:none;}
+  .bigb.p1{background:var(--v);color:#fff;border-color:var(--v);box-shadow:0 10px 24px rgba(126,99,214,.26);}
+  .bigb.p1:hover{background:var(--ink);border-color:var(--ink);box-shadow:0 10px 24px rgba(36,31,46,.22);}
+  .bigb.p2{background:#fff;color:var(--ink);}
+  .bigb.p2:hover{background:var(--lime);border-color:var(--lime);}
+  .hnote{font-size:13.5px;color:var(--gray);display:flex;align-items:center;justify-content:center;gap:9px;}
+
+  /* карусели роликов */
+  .rails{padding:52px 0 62px;position:relative;overflow:hidden;
+    background:linear-gradient(165deg,var(--vd) 0%,var(--vd2) 55%,#3A2C68 100%);color:#fff;}
+  .rails::before{content:'';position:absolute;left:-120px;top:-90px;width:340px;height:300px;border-radius:50%;
+    background:rgba(223,239,149,.16);filter:blur(80px);pointer-events:none;}
+  .rails::after{content:'';position:absolute;right:-100px;bottom:-110px;width:320px;height:300px;border-radius:50%;
+    background:rgba(167,138,240,.35);filter:blur(80px);pointer-events:none;}
+  .rhead{text-align:center;margin-bottom:26px;position:relative;z-index:2;}
+  .rttl{font-size:28px;font-weight:800;letter-spacing:-1.2px;margin-bottom:8px;}
+  .rttl em{font-style:normal;background:var(--lime);color:var(--ink);border-radius:999px;padding:0 15px 3px;display:inline-block;}
+  .rsub{font-size:14.5px;color:rgba(255,255,255,.62);}
+  .railwrap{position:relative;padding:6px 0;
+    transform:scale(.985);transition:transform 1s cubic-bezier(.22,1,.36,1);}
+  .railwrap.vis{transform:none;}
+  .railwrap::before,.railwrap::after{content:'';position:absolute;top:0;bottom:0;width:110px;z-index:4;pointer-events:none;}
+  .railwrap::before{left:0;background:linear-gradient(90deg,#35295F,rgba(53,41,95,0));}
+  .railwrap::after{right:0;background:linear-gradient(270deg,#3B2C6C,rgba(59,44,108,0));}
+  .rail{overflow-x:auto;overflow-y:hidden;scroll-behavior:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;-ms-overflow-style:none;cursor:grab;touch-action:pan-x;}
+  .rail::-webkit-scrollbar{display:none;width:0;height:0;}
+  .rail.drag{cursor:grabbing;}
+  .rail.drag .reel{pointer-events:none;}
+  .rtrack{display:flex;gap:14px;width:max-content;padding:2px 0;
+    filter:blur(3px) saturate(.55);opacity:.5;
+    transition:filter 1s ease,opacity 1s ease;}
+  .railwrap.vis .rtrack{filter:none;opacity:1;}
+  .rveil{position:absolute;inset:0;z-index:3;pointer-events:none;
+    background:linear-gradient(180deg,rgba(51,40,92,.94) 0%,rgba(58,44,104,.72) 45%,rgba(58,44,104,.42) 100%);
+    opacity:1;transition:opacity 1s ease;}
+  .railwrap.vis .rveil{opacity:0;}
+  .rhint{position:absolute;left:50%;transform:translateX(-50%);bottom:-26px;z-index:5;
+    font-size:12.5px;color:rgba(255,255,255,.42);display:flex;align-items:center;gap:7px;
+    opacity:0;transition:opacity .5s ease;pointer-events:none;white-space:nowrap;}
+  .railwrap.vis .rhint{opacity:1;}
+
+  .reel{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:9/12;
+    width:208px;flex:0 0 208px;
+    box-shadow:0 12px 28px rgba(36,31,46,.10);transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s;cursor:default;}
+  .reel:hover{transform:translateY(-6px);box-shadow:0 20px 44px rgba(36,31,46,.16);}
+  .r1{background:linear-gradient(155deg,#A98BEF,#C6B2F5 55%,#E9D6F4);}
+  .r2{background:linear-gradient(155deg,#2B2536,#4E4270);}
+  .r3{background:linear-gradient(155deg,#C7DE8C,#DFEF95 60%,#F2E6B4);}
+  .r4{background:linear-gradient(155deg,#6E56BC,#9781E0 60%,#C3B3F0);}
+  .r5{background:linear-gradient(155deg,#E2C7F0,#C9B4F2 60%,#AFC8EE);}
+  .r6{background:linear-gradient(155deg,#F2DFA8,#DFEF95 65%,#BFDDA0);}
+  .r7{background:linear-gradient(155deg,#3A3048,#6A5A93);}
+  .r8{background:linear-gradient(155deg,#8E76D9,#B6A0EC 55%,#DCCFF6);}
+  .reel::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 46%,rgba(24,20,34,.55));}
+  .rplay{position:absolute;top:10px;left:10px;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.9);
+    display:flex;align-items:center;justify-content:center;z-index:2;}
+  .rplay::before{content:'';border-left:8px solid var(--ink);border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:3px;}
+  .rtag{position:absolute;top:10px;right:10px;z-index:3;background:var(--ink);color:#fff;border-radius:999px;
+    padding:5px 12px 6px;font-size:13px;font-weight:800;letter-spacing:-.2px;line-height:1;
+    box-shadow:0 3px 10px rgba(24,20,34,.28);}
+  .rtag.lm{background:var(--lime);color:var(--ink);box-shadow:0 3px 12px rgba(223,239,149,.45);}
+  .rbot{position:absolute;left:0;right:0;bottom:0;padding:12px;z-index:2;color:#fff;}
+  .rbot b{display:block;font-size:13.5px;font-weight:800;letter-spacing:-.4px;line-height:1.2;}
+  .rbot span{font-size:11px;opacity:.82;line-height:1.3;display:block;margin-top:2px;}
+
+  /* логотипы доверия */
+  .trust{padding:26px 0 6px;text-align:center;}
+  .trust .tl{font-size:13px;color:var(--gray);margin-bottom:16px;}
+  .trust .row{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;}
+  .trust .lg{font-size:19px;font-weight:800;letter-spacing:-.7px;color:var(--v);
+    border:1.5px solid rgba(126,99,214,.35);border-radius:999px;padding:9px 22px;background:#fff;}
+
+  /* цифры */
+  .nums{padding:14px 0 0;}
+  .nums .in{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .nums .in>div{background:#fff;border-radius:var(--r);padding:28px 26px;}
+  .nums .in>div:nth-child(2){background:var(--v);color:#fff;}
+  .nums .in>div:nth-child(2) span{color:rgba(255,255,255,.72);}
+  .nums b{display:block;font-size:47px;font-weight:800;letter-spacing:-2.2px;line-height:1;}
+  .nums b em{font-style:normal;font-size:26px;letter-spacing:-1px;}
+  .nums b.lgn{font-size:38px;letter-spacing:-1.8px;white-space:nowrap;}
+  .nums span{font-size:13.5px;color:var(--gray);margin-top:10px;display:block;}
+
+  .sec{padding:64px 0;}
+  .stitle[id]{scroll-margin-top:86px;}
+  .shead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap;}
+  .stitle{font-size:42px;font-weight:800;letter-spacing:-2px;margin:0;line-height:1.04;max-width:620px;text-transform:uppercase;}
+  .stitle em{font-style:normal;background:var(--v);color:#fff;border:1.5px solid var(--v);border-radius:999px;padding:0 17px 3px;display:inline-block;}
+  .stitle em.lm{background:var(--lime);color:var(--ink);border-color:var(--ink);}
+  .ssub{font-size:16px;color:var(--gray);line-height:1.6;max-width:370px;margin:0;}
+
+  /* идеи и тренды */
+  .ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:14px;}
+  .idea{background:#fff;border-radius:var(--r);padding:28px;position:relative;
+    transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s;}
+  .idea:hover{transform:translateY(-5px);box-shadow:0 16px 36px rgba(36,31,46,.10);}
+  .idea .ico{width:42px;height:42px;border-radius:13px;background:var(--vl);color:var(--v);
+    display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:18px;}
+  .idea b{display:block;font-size:18px;letter-spacing:-.5px;margin-bottom:9px;}
+  .idea p{font-size:14px;color:var(--gray);line-height:1.6;margin:0 0 16px;}
+  .idea .mt{font-size:12.5px;font-weight:700;color:var(--v);display:flex;align-items:center;gap:7px;}
+  .idea .mt .dot{width:7px;height:7px;border-radius:50%;background:var(--lime);
+    box-shadow:0 0 0 3px rgba(223,239,149,.4);flex-shrink:0;}
+
+  .freebar{background:linear-gradient(150deg,var(--vd) 0%,var(--vd2) 60%,#4A3488 100%);color:#fff;
+    border-radius:var(--r);padding:34px 36px;margin-top:14px;position:relative;overflow:hidden;
+    display:flex;align-items:center;gap:34px;flex-wrap:wrap;}
+  .freebar::after{content:'';position:absolute;right:-80px;top:-70px;width:240px;height:220px;
+    border-radius:50%;background:rgba(223,239,149,.14);filter:blur(60px);pointer-events:none;}
+  .freebar .fbl{flex:1 1 300px;position:relative;}
+  .freebar .fbl b{display:block;font-size:21px;letter-spacing:-.7px;margin-bottom:8px;}
+  .freebar .fbl span{font-size:14px;color:rgba(255,255,255,.66);line-height:1.6;}
+  .freebar ul{list-style:none;margin:0;padding:0;flex:1 1 340px;position:relative;
+    display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;}
+  .freebar li{font-size:13.5px;line-height:1.45;display:flex;gap:9px;align-items:flex-start;color:rgba(255,255,255,.92);}
+  .freebar li i{font-style:normal;color:var(--lime);font-weight:900;flex-shrink:0;}
+  .freebar .bigb{position:relative;flex:0 0 auto;}
+  .freebar .bigb.p2{background:var(--lime);border-color:var(--lime);}
+  .freebar .bigb.p2:hover{background:#fff;border-color:#fff;}
+
+  /* идёт сейчас */
+  .lives{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;}
+  .live{background:#fff;border-radius:var(--r);padding:28px;position:relative;
+    transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s;}
+  .live:hover{transform:translateY(-5px);box-shadow:0 16px 36px rgba(36,31,46,.10);}
+  .live.lm{background:linear-gradient(160deg,var(--vd) 0%,var(--vd2) 60%,#4A3488 100%);color:#fff;}
+  .lbadge{display:inline-flex;align-items:center;gap:7px;background:var(--lime);color:var(--ink);
+    border-radius:999px;padding:5px 13px 6px;font-size:12px;font-weight:800;margin-bottom:18px;}
+  .lbadge.dk{background:rgba(255,255,255,.15);color:#fff;}
+  .lbadge .dot{width:7px;height:7px;border-radius:50%;background:var(--ink);animation:pulse 1.8s ease-in-out infinite;}
+  .lbadge.dk .dot{background:var(--lime);}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.7);}}
+  .live b{display:block;font-size:19px;letter-spacing:-.6px;margin-bottom:10px;}
+  .lsum{font-size:38px;font-weight:800;letter-spacing:-1.8px;line-height:1;margin-bottom:12px;color:var(--v);}
+  .live.lm .lsum{color:var(--lime);}
+  .live p{font-size:14px;color:var(--gray);line-height:1.6;margin:0;}
+  .live.lm p{color:rgba(255,255,255,.72);}
+  .lnote{text-align:center;font-size:14.5px;color:var(--gray);margin:24px 0 0;}
+  .lnote b{color:var(--ink);}
+
+  .cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;}
+  .case{background:#fff;border-radius:var(--r);padding:28px;transition:.15s;}
+  .case:hover{transform:translateY(-5px);}
+  .case:nth-child(2){background:linear-gradient(160deg,var(--vd) 0%,var(--vd2) 60%,#4A3488 100%);color:#fff;}
+  .case:nth-child(2) .who span,.case:nth-child(2) .cap{color:rgba(255,255,255,.6);}
+  .case:nth-child(2) .quote{color:rgba(255,255,255,.82);border-color:rgba(255,255,255,.16);}
+  .case .who{display:flex;align-items:center;gap:11px;margin-bottom:24px;}
+  .case .av{width:44px;height:44px;border-radius:50%;background:var(--vl);color:var(--v);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+  .case:nth-child(2) .av{background:var(--lime);color:var(--ink);}
+  .case .who b{font-size:15.5px;display:block;}
+  .case .who span{font-size:12.5px;color:var(--gray);}
+  .case .big2{font-size:47px;font-weight:800;letter-spacing:-2.2px;line-height:1;margin-bottom:6px;}
+  .case .big2 em{font-style:normal;background:var(--lime);color:var(--ink);border-radius:999px;padding:0 14px 2px;display:inline-block;}
+  .case .cap{font-size:13.5px;color:var(--gray);margin-bottom:20px;font-weight:600;}
+  .case .quote{font-size:14px;line-height:1.6;padding-top:18px;border-top:1px solid #EAE7F0;color:#4A4556;}
+
+  .steps2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;counter-reset:s;}
+  .lp .st2{background:#fff;border-radius:var(--r);padding:28px;position:relative;transition:.15s;}
+  .lp .st2::before{counter-increment:s;content:'0' counter(s);display:inline-flex;align-items:center;justify-content:center;
+    width:38px;height:38px;border-radius:50%;background:var(--vl);color:var(--v);font-size:13px;font-weight:800;}
+  .lp .st2 b{display:block;font-size:18px;margin:16px 0 9px;letter-spacing:-.5px;}
+  .lp .st2 p{font-size:14px;color:var(--gray);line-height:1.6;margin:0;}
+  .lp .st2:hover{background:var(--lime);}
+  .lp .st2:hover::before{background:var(--ink);color:var(--lime);}
+  .lp .st2:hover p{color:#3A3844;}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .half{background:#fff;border-radius:var(--r);padding:36px;}
+  .half.dark{background:linear-gradient(155deg,var(--v) 0%,#6B52C0 60%,var(--vd2) 100%);color:#fff;}
+  .half h3{font-size:30px;font-weight:800;margin:0 0 10px;letter-spacing:-1.2px;text-transform:uppercase;}
+  .half p.hd{font-size:15.5px;line-height:1.6;margin:0 0 24px;color:var(--gray);}
+  .half.dark p.hd{color:rgba(255,255,255,.8);}
+  .flist{list-style:none;padding:0;margin:0 0 28px;}
+  .flist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.55;margin-bottom:14px;}
+  .half.dark .flist li{color:rgba(255,255,255,.95);}
+  .tick{width:22px;height:22px;border-radius:50%;background:var(--lime);flex-shrink:0;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--ink);}
+  .half .bigb{width:100%;justify-content:center;}
+  .half.dark .bigb.p2{background:var(--lime);border-color:var(--lime);}
+
+  .faq{display:flex;flex-direction:column;gap:10px;}
+  .fq{background:#fff;border-radius:18px;padding:22px 26px;cursor:pointer;transition:.15s;}
+  .fq:hover{background:var(--lime);}
+  .fq.op{background:linear-gradient(150deg,var(--vd),var(--vd2));color:#fff;}
+  .fq b{font-size:17.5px;display:flex;justify-content:space-between;gap:16px;align-items:center;letter-spacing:-.5px;font-weight:700;}
+  .fq b i{font-style:normal;font-size:14px;flex-shrink:0;font-weight:800;background:var(--lime);color:var(--ink);
+    width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .fq p{font-size:15px;color:var(--gray);line-height:1.68;margin:14px 0 0;display:none;max-width:700px;}
+  .fq.op p{display:block;color:rgba(255,255,255,.72);}
+
+  .final{background:linear-gradient(150deg,var(--vd) 0%,var(--vd2) 55%,#4B3590 100%);color:#fff;border-radius:var(--r);padding:64px 40px;text-align:center;position:relative;overflow:hidden;}
+  .final::before{content:'';position:absolute;left:-90px;top:-90px;width:260px;height:260px;border-radius:50%;background:rgba(223,239,149,.14);}
+  .final::after{content:'';position:absolute;right:-70px;bottom:-70px;width:210px;height:210px;border-radius:50%;background:rgba(167,138,240,.38);}
+  .final h2{font-size:47px;font-weight:800;margin:0 0 14px;letter-spacing:-2.2px;position:relative;text-transform:uppercase;}
+  .final h2 em{font-style:normal;background:var(--lime);color:var(--ink);border-radius:999px;padding:0 20px 4px;display:inline-block;}
+  .final p{font-size:17px;color:rgba(255,255,255,.66);margin:0 0 30px;position:relative;}
+  .final .hcta{justify-content:center;position:relative;margin:0;}
+  .final .bigb.p2{background:#fff;}
+  .final .fnote{position:relative;margin:26px auto 0;max-width:520px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.6);}
+
+  /* ===== АНИМАЦИИ ===== */
+  .lp .rv{opacity:0;transform:translateY(24px);
+    transition:opacity .65s cubic-bezier(.22,1,.36,1),transform .65s cubic-bezier(.22,1,.36,1);}
+  .lp .rv.vis{opacity:1;transform:none;}
+  .lp .rvz{opacity:0;transform:translateY(30px) scale(.96);
+    transition:opacity .75s cubic-bezier(.22,1,.36,1),transform .75s cubic-bezier(.22,1,.36,1);}
+  .lp .rvz.vis{opacity:1;transform:none;}
+  .lp .rvl{opacity:0;transform:translateX(-18px);
+    transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1);}
+  .lp .rvl.vis{opacity:1;transform:none;}
+
+  .hero h1 .hl{position:relative;background:none;}
+  .hero h1 .hl::before{content:'';position:absolute;inset:0;background:var(--lime);border-radius:999px;
+    transform:scaleX(0);transform-origin:left center;transition:transform .7s cubic-bezier(.22,1,.36,1) .35s;z-index:-1;}
+  .hero h1 .hl.vis::before{transform:scaleX(1);}
+
+  .reel .rbot,.reel .rtag,.reel .rplay{transition:transform .25s cubic-bezier(.22,1,.36,1),opacity .25s;}
+  .reel:hover .rbot{transform:translateY(-3px);}
+  .reel:hover .rplay{transform:scale(1.12);}
+  .reel::before{content:'';position:absolute;inset:0;z-index:1;opacity:0;transition:opacity .3s;
+    background:radial-gradient(120% 80% at 50% 0%,rgba(255,255,255,.35),transparent 60%);}
+  .reel:hover::before{opacity:1;}
+
+  .pill{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s;}
+  .pill:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(36,31,46,.10);}
+  .bigb{position:relative;overflow:hidden;}
+  .bigb::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+    transform:translateX(-120%);transition:transform .7s ease;}
+  .bigb:hover::after{transform:translateX(120%);}
+  .bigb:active{transform:scale(.97);}
+  .trust .lg{transition:transform .25s cubic-bezier(.22,1,.36,1),background .2s;}
+  .trust .lg:hover{transform:translateY(-3px);background:var(--lime);}
+  .case{transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s;}
+  .case:hover{box-shadow:0 16px 36px rgba(36,31,46,.10);}
+  .nums .in>div{transition:transform .3s cubic-bezier(.22,1,.36,1);}
+  .nums .in>div:hover{transform:translateY(-5px);}
+
+  @media(prefers-reduced-motion:reduce){
+    .lp .rv,.lp .rvz,.lp .rvl{opacity:1!important;transform:none!important;transition:none;}
+    .hero h1 .hl::before{transform:scaleX(1);transition:none;}
+    .blob{animation:none;}
+    .bigb::after{display:none;}
+  }
+
+  .lfoot{padding:30px 0;text-align:center;font-size:13.5px;color:var(--gray);}
+  .lfoot a{color:var(--v);text-decoration:none;font-weight:700;}
+
+  @media(max-width:1120px){
+    .hero h1{font-size:48px;letter-spacing:-2px;}
+    .hcenter{padding:34px 0 24px;}
+  }
+  @media(max-width:980px){
+    .hmain{min-height:0;}
+    .hero h1{font-size:34px;letter-spacing:-1.3px;}
+    .hcenter{padding:22px 0 18px;}
+    .hero .sub2{font-size:16px;}
+    .hbox{padding:26px;}
+    .rttl{font-size:21px;letter-spacing:-.8px;}
+    .rsub{font-size:13.5px;}
+    .reel{border-radius:16px;width:158px;flex-basis:158px;}
+    .rtrack{gap:10px;}
+    .railwrap::before,.railwrap::after{width:40px;}
+    .rtag{font-size:11.5px;padding:4px 10px 5px;}
+    .rbot b{font-size:12.5px;}
+    .rbot span{font-size:10.5px;}
+    .blob{filter:blur(52px);}
+    .b1,.b4{width:210px;height:190px;}
+    .b2,.b5{width:170px;height:160px;}
+    .b3{display:none;}
+    .trust .lg{font-size:15px;padding:7px 16px;}
+    .split{grid-template-columns:1fr;}
+    .stitle{font-size:29px;letter-spacing:-1.2px;}
+    .ssub{font-size:15px;}
+    .sec{padding:44px 0;}
+    .nums b{font-size:36px;}
+    .nums b.lgn{font-size:30px;letter-spacing:-1.2px;}
+    .final{padding:42px 22px;}
+    .final h2{font-size:29px;}
+    .case .big2{font-size:37px;}
+    .lsum{font-size:32px;letter-spacing:-1.4px;}
+    .live{padding:24px;}
+    .half{padding:26px;}
+    .fq b{font-size:16px;}
+  }
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;}
+  .c{background:var(--card);border:none;border-radius:var(--rd-s);padding:17px;box-shadow:var(--sh);
+    transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s;}
+  .c:hover{transform:translateY(-3px);box-shadow:var(--sh-h);}
+  .c .ic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px;}
+  .c .n{font-size:19px;font-weight:600;line-height:1.15;}
+  .c .s{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+  .c .l{font-size:12.5px;color:var(--text-2);margin-top:4px;}
+  .c.hi{background:linear-gradient(150deg,#FBF9FF,#F5F0FE);box-shadow:0 2px 10px rgba(126,99,214,.12);}
+
+  .box{background:var(--card);border:none;border-radius:var(--rd);overflow:hidden;margin-bottom:16px;box-shadow:var(--sh);}
+  .bh{padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;letter-spacing:-.2px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  .bh span.mut{font-size:12.5px;color:var(--text-muted);font-weight:400;}
+  .bp{padding:20px;}
+
+  .row{display:flex;gap:9px;align-items:center;margin-bottom:10px;}
+  .row:last-child{margin-bottom:0;}
+  .row label{font-size:12.5px;color:var(--text-2);width:110px;flex-shrink:0;}
+  input,select,textarea{padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:13.5px;font-family:inherit;background:#fff;color:var(--text);transition:border-color .18s,box-shadow .18s;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 3px rgba(126,99,214,.14);}
+  .row input{flex:1;background:#FAF9FD;color:var(--text-2);}
+  textarea{width:100%;resize:vertical;min-height:80px;}
+  .btn{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;
+    cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;color:var(--text);white-space:nowrap;
+    text-decoration:none;transition:border-color .18s,background .18s,transform .18s,box-shadow .18s;}
+  .btn:hover{border-color:rgba(36,31,46,.28);background:#fff;}
+  .btn:active{transform:scale(.97);}
+  .btn.p{background:var(--violet);color:#fff;border-color:var(--violet);box-shadow:0 4px 14px rgba(126,99,214,.26);}
+  .btn.p:hover{background:var(--violet-d);border-color:var(--violet-d);box-shadow:0 6px 18px rgba(126,99,214,.32);transform:translateY(-1px);}
+  .btn.lm{background:var(--lime);border-color:var(--lime);color:var(--text);}
+  .btn.lm:hover{background:#EAF6B8;border-color:#EAF6B8;}
+  .btn.lg{padding:13px 24px;font-size:14px;}
+
+  .tag{font-size:11px;padding:4px 11px;border-radius:999px;white-space:nowrap;font-weight:600;display:inline-block;}
+  .tag.v{background:var(--violet-bg);color:var(--violet);}
+  .tag.g{background:var(--green-bg);color:var(--green);}
+  .tag.a{background:var(--amber-bg);color:var(--amber);}
+  .tag.r{background:var(--red-bg);color:var(--red);}
+  .tag.m{background:#EFEDF5;color:var(--text-2);}
+
+  /* ОФФЕР-КАРТОЧКА */
+  .ofc{background:var(--card);border:none;border-radius:var(--rd);margin-bottom:14px;display:grid;grid-template-columns:1fr 250px;box-shadow:var(--sh);overflow:hidden;}
+  .ofl{padding:18px;}
+  .ofr{padding:18px;border-left:1px solid var(--border);display:flex;flex-direction:column;gap:9px;}
+  .oft{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:3px;}
+  .oft h3{font-size:16px;font-weight:700;margin:0;color:var(--violet);letter-spacing:-.3px;}
+  .stars{color:#F5B301;font-size:12px;letter-spacing:1px;}
+  .ofd{font-size:12.5px;color:var(--text-2);margin:0 0 14px;}
+  .oftab{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .oftab th{text-align:left;padding:7px 0;font-size:11px;color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;border-bottom:1px solid var(--border);}
+  .oftab th:not(:first-child){text-align:right;}
+  .oftab td{padding:9px 0;border-bottom:1px solid var(--border);}
+  .oftab td:not(:first-child){text-align:right;}
+  .oftab tr:last-child td{border-bottom:none;}
+  .ofm{display:flex;justify-content:space-between;font-size:12.5px;}
+  .ofm span:first-child{color:var(--text-2);}
+  .ofm span:last-child{font-weight:500;}
+  .geo{display:flex;gap:4px;font-size:14px;}
+
+  .scroll{overflow-x:auto;}
+  table.dt{width:100%;border-collapse:collapse;font-size:13px;min-width:760px;}
+  table.dt th{text-align:left;padding:11px 14px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap;}
+  table.dt th.hi{color:var(--violet);background:#FAF7FF;}
+  table.dt td{padding:12px 14px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  table.dt td.hi{background:#FAF7FF;}
+  table.dt tr:last-child td{border-bottom:none;}
+  table.dt tbody tr:hover td{background:#FAF9FD;}
+  table.dt tbody tr:hover td.hi{background:#F5EFFF;}
+  .money{color:var(--green);font-weight:600;}
+  .zero{color:var(--text-muted);}
+  .kf{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;border-radius:999px;background:var(--violet);color:#fff;font-size:10.5px;font-weight:600;margin-left:6px;padding:0 6px;}
+  .plat{display:inline-flex;align-items:center;gap:7px;}
+  .plat i{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;}
+
+  .search{position:relative;margin-bottom:14px;}
+  .search i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:16px;}
+  .search input{width:100%;padding:11px 15px 11px 39px;background:#fff;}
+
+  .note{display:flex;gap:11px;background:var(--violet-bg);border-radius:var(--rd-s);padding:14px 17px;font-size:13px;color:#453070;line-height:1.55;margin-bottom:18px;}
+  .note i{font-size:17px;flex-shrink:0;margin-top:1px;}
+
+  .lvl{display:flex;align-items:center;gap:15px;background:var(--card);border:none;border-radius:var(--rd);padding:18px 20px;margin-bottom:18px;flex-wrap:wrap;box-shadow:var(--sh);}
+  .lvl .bdg{width:46px;height:46px;border-radius:15px;background:linear-gradient(140deg,var(--vd2),var(--violet));color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+  .lvl .tx{flex:1;min-width:220px;}
+  .lvl .tx b{font-size:14.5px;}
+  .lvl .tx p{font-size:12.5px;color:var(--text-2);margin:2px 0 8px;}
+  .gain{margin-top:10px;background:var(--green-bg);border-radius:12px;padding:10px 14px;font-size:12.5px;color:#166534;line-height:1.55;}
+  .gain b{color:#0F7B37;}
+  .bar{height:7px;background:#EDE9F6;border-radius:99px;overflow:hidden;}
+  .bar span{display:block;height:100%;background:linear-gradient(90deg,var(--violet),#A78BEA);border-radius:99px;transition:width .8s cubic-bezier(.22,1,.36,1);}
+
+  .lb{display:flex;align-items:center;gap:13px;padding:12px 18px;border-bottom:1px solid var(--border);}
+  .lb:last-child{border-bottom:none;}
+  .lb.me{background:linear-gradient(90deg,#F7F3FF,transparent);}
+  .lb .pos{width:24px;font-size:13px;font-weight:600;color:var(--text-muted);text-align:center;flex-shrink:0;}
+  .lb .pos.t{color:#F5B301;}
+  .lb .nm{flex:1;font-size:13.5px;}
+  .lb .val{font-size:13.5px;font-weight:600;color:var(--green);}
+
+  .st{display:flex;gap:13px;padding:13px 0;border-bottom:1px solid var(--border);}
+  .st:last-child{border-bottom:none;}
+  .st .num{width:26px;height:26px;border-radius:9px;background:var(--violet-bg);color:var(--violet);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+  .st .num.ok{background:var(--green-bg);color:var(--green);}
+  .st b{font-size:13.5px;font-weight:500;display:block;margin-bottom:2px;}
+  .st p{font-size:12.5px;color:var(--text-2);margin:0;line-height:1.5;}
+
+  .lesson{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--border);}
+  .lesson:last-child{border-bottom:none;}
+  .lesson .ic2{width:34px;height:34px;border-radius:11px;background:var(--violet-bg);color:var(--violet);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+  .lesson .t{flex:1;}
+  .lesson .t b{font-size:13.5px;font-weight:500;display:block;}
+  .lesson .t span{font-size:12px;color:var(--text-muted);}
+
+  .calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;align-items:end;}
+  .calc .f label{display:block;font-size:12.5px;color:var(--text-2);margin-bottom:5px;}
+  .calc .f input,.calc .f select{width:100%;}
+  .res{background:var(--green-bg);border-radius:var(--rd-s);padding:16px 18px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .res b{font-size:22px;font-weight:600;color:var(--green);}
+  .res span{font-size:12.5px;color:#166534;}
+
+  .v{display:none;} .v.on{display:block;}
+  .pg{display:none;} .pg.on{display:block;}
+
+  .tsw{display:flex;background:rgba(36,31,46,.07);border-radius:999px;padding:3px;}
+  .tsw button{border:none;background:none;font-size:12px;padding:6px 13px;border-radius:999px;cursor:pointer;color:var(--text-2);font-family:inherit;transition:.18s;}
+  .tsw button.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 2px 6px rgba(36,31,46,.10);}
+  .testbar{background:#FDF8E8;border-bottom:1px solid #F0E3C4;}
+  .tbin{max-width:1200px;margin:0 auto;padding:8px 26px;display:flex;align-items:center;gap:12px;font-size:12.5px;color:#7A5B10;}
+  .backbar{background:var(--violet-bg);border-bottom:1px solid #E3D9F8;}
+  .bbin{max-width:1200px;margin:0 auto;padding:9px 26px;display:flex;align-items:center;gap:10px;font-size:13px;color:#4C1D95;}
+  .bbin button{margin-left:auto;}
+  table.dt tr.clk{cursor:pointer;}
+  .stepper{display:flex;align-items:center;gap:6px;}
+  .stepper input{width:78px;text-align:center;padding:7px 8px;}
+
+  .filters{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap;}
+  .filters button{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text-2);transition:.18s;}
+  .filters button:hover{border-color:rgba(36,31,46,.24);color:var(--text);}
+  .filters button.on{background:var(--violet);color:#fff;border-color:var(--violet);box-shadow:0 4px 12px rgba(126,99,214,.24);}
+
+  .ct{background:var(--card);border:none;border-radius:var(--rd);padding:20px;margin-bottom:14px;cursor:pointer;box-shadow:var(--sh);transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s;}
+  .ct:hover{transform:translateY(-3px);box-shadow:var(--sh-h);}
+  .ct.off{opacity:.6;cursor:default;}
+  .ct.off:hover{transform:none;box-shadow:var(--sh);}
+  .cth{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+  .cth h3{font-size:15.5px;font-weight:600;margin:0 0 3px;}
+  .cth .of{font-size:12.5px;color:var(--text-2);}
+  .ctd{font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;}
+  .ctm{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;}
+  .ctm div span{display:block;color:var(--text-muted);font-size:11.5px;margin-bottom:2px;}
+  .ctm div b{font-size:14px;font-weight:600;}
+  .mypos{background:var(--violet-bg);border-radius:12px;padding:10px 14px;margin-top:13px;font-size:13px;color:#4C1D95;display:flex;align-items:center;gap:8px;}
+  .prz{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .prz:last-child{border-bottom:none;}
+  .prz b{font-weight:600;}
+
+  /* тур */
+  #tourDim{position:fixed;inset:0;background:rgba(18,14,30,.66);z-index:69;display:none;
+    animation:dimin .3s ease;}
+  @keyframes dimin{from{opacity:0;}to{opacity:1;}}
+  #tourTip.intro{max-width:430px;padding:32px 34px;border-radius:26px;
+    background:linear-gradient(155deg,var(--vd) 0%,var(--vd2) 58%,#4A3488 100%);color:#fff;
+    box-shadow:0 34px 80px rgba(14,10,26,.55);
+    animation:tipin .4s cubic-bezier(.22,1,.36,1);}
+  @keyframes tipin{from{opacity:0;transform:translate(-50%,-46%) scale(.94);}}
+  #tourTip.intro .tt{font-size:27px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin:0 0 12px;}
+  #tourTip.intro .td{font-size:15px;color:rgba(255,255,255,.74);line-height:1.6;margin:0 0 24px;}
+  #tourTip.intro .tf{gap:10px;}
+  #tourTip.intro .tc{color:rgba(255,255,255,.42);}
+  #tourTip.intro .tskip{color:rgba(255,255,255,.55);}
+  #tourTip.intro .tskip:hover{color:#fff;}
+  #tourTip.intro .btn.p{background:var(--lime);color:#241F2E;border-color:var(--lime);
+    box-shadow:0 6px 20px rgba(223,239,149,.28);padding:12px 22px;font-size:14px;}
+  #tourTip.intro .btn.p:hover{background:#fff;border-color:#fff;}
+  #tourTip.wide{max-width:560px;}
+  #tourTip.intro{max-height:86vh;overflow-y:auto;scrollbar-width:none;}
+  #tourTip.intro::-webkit-scrollbar{display:none;}
+  #tourArt{display:none;margin:0 0 22px;}
+  .tstep{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;
+    color:rgba(255,255,255,.62);margin:16px 0 8px;letter-spacing:.1px;}
+  .tstep:first-child{margin-top:0;}
+  .tstep .tn{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+  .tline{display:flex;align-items:center;gap:10px;background:#fff;border-radius:13px;
+    padding:11px 13px;flex-wrap:wrap;}
+  .tline .tp{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#241F2E;}
+  .tline .tp i{width:21px;height:21px;border-radius:7px;background:#111;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+  .tline .tv{font-size:12.5px;color:#7A7684;}
+  .tline .tst{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;
+    background:#EFEDF5;color:#7A7684;margin-left:auto;}
+  .tline .tst.ok{background:#EBF7F0;color:#3E9E63;}
+  .tline .tst.wait{background:#FCF5E8;color:#C9922F;}
+  .tline .tm{font-size:13px;font-weight:700;color:#A8A3B5;min-width:64px;text-align:right;}
+  .tline .tm.win{color:#3E9E63;}
+  .tline .tbtn{font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:999px;
+    background:#241F2E;color:#fff;white-space:nowrap;}
+  .tsel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px;}
+  .tsel .tchip{font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:999px;
+    background:rgba(255,255,255,.10);color:rgba(255,255,255,.6);white-space:nowrap;}
+  .tsel .tchip.on{background:var(--lime);color:#241F2E;}
+  .tform{margin-top:10px;text-align:center;font-size:13px;font-weight:700;color:var(--lime);}
+  #tourRing{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(18,18,24,.62);pointer-events:none;z-index:70;transition:.22s;display:none;}
+  #tourTip{position:fixed;z-index:72;background:#fff;border-radius:18px;padding:16px 18px;max-width:310px;box-shadow:0 10px 34px rgba(0,0,0,.24);display:none;}
+  #tourTip .tt{font-size:14.5px;font-weight:600;margin:0 0 5px;}
+  #tourTip .td{font-size:13px;color:var(--text-2);line-height:1.55;margin:0 0 14px;}
+  #tourTip .tf{display:flex;align-items:center;gap:8px;}
+  #tourTip .tc{font-size:12px;color:var(--text-muted);margin-right:auto;}
+  #tourTip .tskip{border:none;background:none;font-size:12.5px;color:var(--text-muted);cursor:pointer;font-family:inherit;padding:6px;}
+
+  .ov{display:none;position:fixed;inset:0;background:rgba(24,20,34,.44);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:60;padding:20px;}
+  .ov.on{display:flex;}
+  .md{background:#fff;border-radius:24px;max-width:460px;width:100%;overflow:hidden;box-shadow:0 24px 60px rgba(24,20,34,.26);animation:mdin .32s cubic-bezier(.22,1,.36,1);}
+  @keyframes mdin{from{opacity:0;transform:translateY(16px) scale(.97);}to{opacity:1;transform:none;}}
+  .mdh{padding:20px 22px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .mdh h3{font-size:18px;font-weight:700;letter-spacing:-.4px;margin:0 0 4px;}
+  .mdh p{font-size:13px;color:var(--text-2);margin:0;line-height:1.5;}
+  .mdx{border:none;background:#EFEDF5;width:32px;height:32px;border-radius:999px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);flex-shrink:0;}
+  .mdb{padding:0 22px 22px;}
+  .soc{display:flex;align-items:center;gap:13px;padding:15px;border:1.5px solid var(--border);border-radius:16px;margin-bottom:10px;cursor:pointer;transition:.18s;}
+  .soc:hover{border-color:var(--violet);background:#FAF7FF;transform:translateY(-2px);}
+  .soc:last-child{margin-bottom:0;}
+  .soc .si{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;}
+  .soc .st2{flex:1;}
+  .soc .st2 b{font-size:14px;font-weight:600;display:block;margin-bottom:2px;}
+  .soc .st2 span{font-size:12.5px;color:var(--text-2);line-height:1.45;display:block;}
+  .soc .ar{color:var(--text-muted);font-size:16px;}
+  .pmlabel{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--text-muted);margin:0 0 10px;}
+  .pm{display:flex;align-items:center;gap:13px;padding:14px 15px;margin-bottom:9px;cursor:pointer;
+    border:1.5px solid var(--border);border-radius:16px;background:#fff;transition:.18s;}
+  .pm:hover{border-color:#C9B8F5;}
+  .pm.on{border-color:var(--violet);background:#FBF9FF;box-shadow:0 0 0 3px rgba(126,99,214,.12);}
+  .pm .pmi{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+    font-size:19px;flex-shrink:0;}
+  .pm .pmt{flex:1;min-width:0;}
+  .pm .pmt b{display:block;font-size:14.5px;font-weight:700;letter-spacing:-.2px;margin-bottom:3px;}
+  .pm .pmt em{display:block;font-style:normal;font-size:12.5px;color:var(--text-2);line-height:1.45;}
+  .pm .pmc{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;color:transparent;font-size:13px;transition:.18s;}
+  .pm.on .pmc{background:var(--violet);border-color:var(--violet);color:#fff;}
+  .pmfoot{font-size:12px;color:var(--text-muted);text-align:center;margin-top:12px;line-height:1.5;}
+  .pmfoot a{color:var(--violet);font-weight:600;text-decoration:none;}
+  .pmfoot a:hover{text-decoration:underline;}
+
+  .fmt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid var(--border);border-radius:14px;margin-bottom:8px;cursor:pointer;transition:.18s;}
+  .fmt:hover{border-color:#C9B8F5;}
+  .fmt.on{border-color:var(--violet);background:#FAF7FF;box-shadow:0 0 0 3px rgba(126,99,214,.12);}
+  .fmt .fk{width:40px;height:26px;border-radius:999px;background:#EFEAFA;color:var(--violet);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+  .fmt.on .fk{background:var(--violet);color:#fff;}
+  .fmt .fx{flex:1;}
+  .fmt .fx b{font-size:13.5px;font-weight:500;display:block;}
+  .fmt .fx span{font-size:12px;color:var(--text-2);}
+  .fmt .fp{font-size:13.5px;font-weight:600;color:var(--green);white-space:nowrap;}
+
+  .perbar{display:flex;align-items:center;gap:8px;margin:0 0 20px;flex-wrap:wrap;}
+  .perbar .pg2{display:flex;background:rgba(36,31,46,.07);border-radius:999px;padding:3px;}
+  .perbar .pg2 button{border:none;background:none;font-size:12.5px;padding:7px 14px;border-radius:999px;cursor:pointer;color:var(--text-2);font-family:inherit;white-space:nowrap;transition:.18s;}
+  .perbar .pg2 button.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 2px 6px rgba(36,31,46,.10);}
+  .perbar .dts{display:flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:6px 14px;}
+  .perbar .dts input{border:none;padding:2px 0;font-size:12.5px;background:transparent;width:112px;color:var(--text-2);}
+  .perbar .dts input:focus{outline:none;color:var(--text);}
+  .perbar .dts span{color:var(--text-muted);font-size:12px;}
+  .perbar .cnt{font-size:12.5px;color:var(--text-muted);margin-left:auto;}
+
+  /* уведомления */
+  .nin .bell,.nin .tourbtn{position:relative;border:1.5px solid #DFD4F8;background:var(--violet-bg);border-radius:999px;width:36px;height:36px;min-width:36px;padding:0;margin:0;cursor:pointer;color:var(--violet);display:inline-flex;align-items:center;justify-content:center;align-self:center;flex-shrink:0;transition:.18s;}
+  .nin .bell svg,.nin .tourbtn svg{width:20px;height:20px;display:block;}
+  .nin .bell:hover,.nin .tourbtn:hover{border-color:var(--violet);background:var(--violet);color:#fff;}
+  .nin .bell .bdot{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:600;line-height:1;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #fff;box-sizing:content-box;}
+  #npanel{position:fixed;z-index:75;background:#fff;border-radius:20px;box-shadow:0 20px 50px rgba(24,20,34,.20);width:340px;max-width:calc(100vw - 24px);display:none;overflow:hidden;}
+  #npanel .nh{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:600;}
+  #npanel .nh button{border:none;background:none;font-size:12px;color:var(--violet);cursor:pointer;font-family:inherit;}
+  #npanel .nl{max-height:400px;overflow-y:auto;}
+  .ni{display:flex;gap:11px;padding:12px 16px;border-bottom:1px solid var(--border);}
+  .ni:last-child{border-bottom:none;}
+  .ni.new{background:linear-gradient(90deg,#F8F4FF,transparent);}
+  .ni .nic{width:32px;height:32px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+  .ni .nt{flex:1;}
+  .ni .nt b{font-size:13px;font-weight:500;display:block;margin-bottom:2px;}
+  .ni .nt span{font-size:12.5px;color:var(--text-2);line-height:1.5;display:block;}
+  .ni .nt i.tm{font-size:11.5px;color:var(--text-muted);font-style:normal;display:block;margin-top:3px;}
+
+  .ck{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);}
+  .ck:last-child{border-bottom:none;}
+  .ck .cb{width:26px;height:26px;border-radius:9px;background:#F1F1F5;color:var(--text-2);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;flex-shrink:0;}
+  .ck.now .cb{background:var(--violet);color:#fff;}
+  .ck .cc{flex:1;}
+  .ck .cc b{font-size:13.5px;font-weight:500;display:block;margin-bottom:2px;}
+  .ck .cc span{font-size:12.5px;color:var(--text-2);line-height:1.5;}
+
+  .qm{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:#EDECF2;color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;margin-left:6px;vertical-align:1px;flex-shrink:0;user-select:none;}
+  .qm:hover{background:var(--violet);color:#fff;}
+  #qpop{position:fixed;z-index:80;background:var(--text);color:#fff;border-radius:11px;padding:12px 14px;max-width:290px;font-size:12.5px;line-height:1.55;display:none;box-shadow:0 8px 26px rgba(0,0,0,.28);}
+  #qpop b{color:#fff;}
+
+  .krow{display:flex;align-items:center;gap:3px;}
+  .kbtn{border:1px solid var(--border);background:#fff;border-radius:7px;padding:5px 8px;font-size:11.5px;cursor:pointer;font-family:inherit;color:var(--text-2);min-width:34px;}
+  .kbtn:hover{border-color:var(--violet);color:var(--violet);}
+  .kbtn.on{background:var(--violet);color:#fff;border-color:var(--violet);font-weight:600;}
+  #t{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:50;}
+  .toast{background:var(--text);color:#fff;font-size:13px;padding:10px 15px;border-radius:9px;opacity:0;transition:.25s;}
+  .toast.s{opacity:1;}
+
+  /* ===== МОБИЛЬНАЯ ВЕРСИЯ ===== */
+  @media(max-width:760px){
+    .hin,.nin,.wrap,.tbin,.bbin{padding-left:14px;padding-right:14px;}
+    .wrap{padding-top:18px;padding-bottom:50px;}
+    .hin{gap:8px;}
+    .logo{font-size:14px;} .logo i{font-size:18px;}
+    h1{font-size:19px;} .sub{font-size:13px;margin-bottom:18px;}
+    .land{padding:36px 16px 50px;}
+    .land h1{font-size:25px;} .land .lead{font-size:14.5px;margin-bottom:28px;}
+    .pick{grid-template-columns:1fr;gap:12px;} .pk{padding:20px;}
+    .stats{gap:20px;margin-top:32px;} .stats b{font-size:20px;}
+
+    .tbin{flex-wrap:wrap;gap:8px;font-size:12px;}
+    .tsw button{padding:5px 9px;font-size:11.5px;}
+    .nin button{padding:11px 10px;font-size:13px;}
+    .nin .navsoc{margin-left:8px;}
+    .nin .navsoc a{padding:6px 8px;font-size:12px;}
+    .nin .navsoc a span,.nin .navsoc a:not(:last-child) i+*{display:inline;}
+
+    .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+    .c{padding:13px;} .c .n{font-size:17px;} .c .ic{width:28px;height:28px;font-size:14px;margin-bottom:8px;}
+    .c .l{font-size:12px;}
+
+    .lvl{flex-direction:column;align-items:stretch;gap:10px;padding:14px;}
+    .lvl>div:last-child{text-align:left !important;display:flex;align-items:baseline;gap:7px;}
+
+    .bh{padding:13px 14px;font-size:13.5px;} .bp{padding:14px;}
+    .row{flex-wrap:wrap;} .row label{width:100%;margin-bottom:3px;}
+    .row input,.row select{width:100%;flex:1 1 auto;min-width:0;}
+
+    .ofc{grid-template-columns:1fr;}
+    .ofr{border-left:none;border-top:1px solid var(--border);}
+    .grid2{grid-template-columns:1fr;}
+    .calc{grid-template-columns:1fr;}
+    .res{flex-direction:column;align-items:flex-start;gap:4px;}
+
+    .md{max-height:88vh;border-radius:16px;}
+    .mdh{padding:16px 16px 12px;} .mdb{padding:0 16px 16px;}
+    .fmt{padding:10px;gap:9px;} .fmt .fx b{font-size:13px;} .fmt .fp{font-size:13px;}
+    #tourTip{max-width:calc(100vw - 28px);}
+
+    /* таблицы превращаются в карточки */
+    table.dt{min-width:0 !important;display:block;}
+    table.dt thead{display:none;}
+    table.dt tbody,table.dt tr{display:block;}
+    table.dt tr{border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:9px;}
+    table.dt tr:hover td,table.dt tr:hover td.hi{background:transparent;}
+    table.dt td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 0;border:none;white-space:normal;background:transparent !important;}
+    table.dt td::before{content:attr(data-l);color:var(--text-muted);font-size:12px;flex-shrink:0;}
+    table.dt td:empty{display:none;}
+    .krow{flex-wrap:wrap;justify-content:flex-end;}
+    .scroll{overflow-x:visible;}
+    .lb{padding:11px 14px;} .prz{font-size:12.5px;}
+  }
+</style>
+</head>
+<body>
+
+<header><div class="hin">
+  <div class="logo" onclick="home()"><img class="egl" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAATUAAABICAMAAACgCpKdAAAAYFBMVEUAAAArIUVcI/D9+/0jGjtcVWyMaeOvr7BwcHChnat2Sura0ee4q9i0neKPipusq/t3d7p4coW5dP6liePFs+iopLG6eLtDO1d1dfyBfI4CAv/sqvYJCXn/f/96N7z/AP86jfWYAAAAIHRSTlMA/v4R/fntAwOn/lNknNsDA+YDzWZpA/4C4gELAgIDAXMHSKIAAAtESURBVHja7ZyJkuMsDoBxy/g+Yye2c3S//1uuhC+EwUlPMrv/7pqqSfUENUafBQghWogPlWsEeTCXHMSPOMrzUgoIvuYSHNQOage1g9pB7aB2UDuoHdT+6dTgQHJQO6gd1P4Z5Vqeqr7qv/vyBbWhPF1O5ePz1CAMoyi6hNGb2gCEl6oKIXrtiVX4cNSEN7c+cLkz83nsPea0yt4vYKMG5WUqm1ewUyW4jlEIu1giF5Howv5b7agd6v8LXTX30PbLfam6keVUspSe0vdOZuozbbNRUJQf8jzGfgKk5/MZm1ZtR/CKtryMZrq0s+GxeWJKkuMDQ/b6IM2wYmwitExMKJAHSTIqngRNi5InsI7MSRal8V+QY5s9GNSAoE4l5SOWqpbCqujHNC8klq6jzyKm/tq4KW1RpbgoippKLCK9GUjjQc6lLjKYvjfxKslaPZEEY5QZzTuimmKpwZ5sWoCrgDZIvvSSUHRRbM0Nv4GcyQYNtmiM0JOgVzCWIBOVPlqoaoxfJkFL72sqF+qn7DzP9z36oE85kMLbcax0Qm1mOU8udTdEH081Y8FaSVpXW2jQDtIbZdSnklNPhAxr8Ftv6o8sUt4RnMHShjMb1Uepm/GgG/HdCOawpbby31BbfzNbqFFXCzn2cCmoSCeRW7jRNq/lDMxj1CIBsdkMKS9j2EJD8sYDsSHsfkV92dTE+sgAMp4vW0kaECfTxbDxTfJ9aqWD2lqF3cmlZ+g6gpMFiMiAZuo0U8PZKB1szeB3tWEsCK3eivoKr7XGK1ZsDwTx5SoBt7abSO18v5r3qIVkITZlZ30jfWjAsBGSs6UJVzPEQ8eG0KyifhcD1PZGEFs/9yH4cpcg1VQu92X/nBp2ovBc2pK5pevL61HWd1C7oME6mxmxXVeDHXzHWypqV00M4biw7Fia4bM+XoL2B9Si+x406m699qIXsUVC7pmPPvrmKTZ0P3KPe6asvoT8CQSc2x6Ty/FU9k+pibjb01aNjWj2u8BGRo4WIPebIaOtpnk0fSLraACUSRsrovIVOIV8UroUbfKH1KpdaqaJrB4DG1zhNHPFnbcVlrQSGEN328xitKbsVnL+mq3UZGxoRFc+5oK8vd1ureGPjVMbgDk+J6frXWroK+jzCHlN5LdKybs7+h/AZjWSlSRdxLSJynT4UzM1W5lxZlLNPJhZUiv0QHNsotujWtA7MtCCkHO3a3ZGmAU2aqthmhptCqikptvyW2ohsx5fDrFqF7JiUmz8jMVldMdWdf1uiLNRmEyIr3zosI79i3UaE31msf4kmhrLOE2D6vuCj3E2vaNNiWt1eTwq8v8b09i4WZIrN5e0eYca19aXy6tD91+u1EhdMEez7rkapkau/NxOoVfE0w6Wg5gKM9ble9DWH5kL3XxQ2WXf2ZcMWyPgh7tq6NaKqlRvovw2luFfUgt1bVVPozAEnHhok6hpgd2NiNoqrexmLCUZ2+pJKIcUm8H9cRjSbmFdbNTMxt8U+iMX1YhgyzNOpVFIGt4MaU1d1LUS17mIb3NnyTZCyPHqdON+SS3S3iSt7FWkbdGZYYk7Da3zQsAfAEDbMGjwB30XRnsJZkGhvtpORrzxXBBv1M/fa10sNG2TbUBgtS3cZN+uonlxy/DbeU1/kQXc9U3PBbvLtYt0c1Ac12Y1ECnbujKiaEIX5qMM2vYS2Ftafh9WmkhtHaBJEzRjCZbPlUROIbVAd0Z4OLCE5g1qmratMIKEsEHBqK3diJg9GAHckP8WN6pC35Qvb9DvViV7vRu1eMlrHT1dfRQmrRErPRkT5C+83FCbgmnOefCIkDa2ZGZQ69jL00y2i4VJrWWU2Fwa6w8s9MkiXLtRa9SaF6kFoA9YWlRh/7TldWo4CNlgMSNpGqSRhZ0aU8wYoHzXMM55jJqGOHZQGz5ADZ5Q+3l1hLbcWzNtBIXPpnqr8XWCUbPN7zvUvF9RK9bGRfDH1MQHqXluapetURT63vN1arU+DbioRf9Ralekljioff+G2t+wtbepNca23VUCME8GHga1W2JQy16iRruOvRFK7pn3EVvjvvEb1PQ1tGmznZIa1NIfMExCW0NpwS1FpvkpzA/otXiT2qvlzAx4w3cN0pbaeX0dfDUwHBjucL1NbTWI5um5vDacDeuhU9pGP0GpiJqG0Wgq4NS4QiU/J+Zu5y61wXfarL7kvEtNavYTpN/lyVlCosYcWXaaXeo7e0R6ot2CPmTXjY/oe/OYnoMxvNyYU+MOnEaNNNejaGyLgZvawXuN2vlX1HBc9WxwQP89l2oTKEoEO7tiAaeEYvzAnWLNgm6mQ6wHzMjTKsG+E1qo+VZqlQbYR9dOz3UgJ/eD1PSJmWJBRlKCMaEaUSXQjm35NlRNSPyr+QDvxprJUVl9945WomIeFJSgEASP7e/aGt95U+gkXA/Y09r/pK2lzH5wfhqP66nD+VrUeeSdxYMI2/10Kk/UbxbDzJUZnthuLadlFUvFA3dohJURMcOZXAvc8QORXWp8YqMFAdWJQhVBSWvP+yQ1poOKB576/moEcwO1Qal4LHcJ/EKaJ18buyp5OK5ZhM2YkqGuiuVSngpAFhtHxbvUaIh2vnEYPG3K+KnE29RO/FSYMg/GADg7YM9V7Bl+jDPAoMnbts2DwDibiYTlxDBoRNYKQ7hR52yR7snSWUAnZS0tYfx9ahGfBH1PFvn5fI4Lo52Zmv/H1H4uJolA5LngJyi4BPbTzGGerGzOs9Yp7KL7HnbhZDnGGTZnS57lyGifmnIv+KlNJzu5Od58n5oxx9uTPdo5s6h8HllK8mXeh6ctN5P/Er54NvmE2uZkz342/AFq5AgEzzjM6ylU0DwFsfgvp61pupIhyC17puxzavsnw3Ku2qcWv0SNnpvsc1gdqP6ZZbIQUinyvZYDsXpxlfPw3ZevU+PBR/Pw3qTmvUON5iw3Clr8wOW02aCVeiLqnmniis3chmmh20xCTee/5OVO2BzZMbhb2KEmfk2NTp+cg5ScEXghf81GeEyMcwoLM7k0lrZksnMq/ZdtjdROpS3zQKYfpkYDL7UbRdAKIyREmxyHaQbtJqextyVWzi3fDcKUuGj4CF6dGfE18yBhkzSK2Ipuww193o9Tw4nbli2p/Fiw5+W+KAxW4cQqHKlU2znRVmXToqN6P3d82sb+z6Xb2hpNkWP2qebGUEpttFKr2WrgO+e11hUp4tolXLNUiJMrBzzXs2IS9XcVhO1qB+1nTeGGHndxJWQXc+Z2MSYgr1HJjo4/Ua81t9tia2Mz50LOabtSDi0dkEM8DPWYLg6RylEdc2cIabj+7plSyuUottBEnyauZ/lYj3DQjiBvlr8uQbvBq+OiBnyr/UPWkHiTZy3lQziFr2Jtummy1nKVYUpw6efk/2y+JRDe+TRG8wNoxf5EUhZwUzBQrtE5Bddlgw+U6eoF3QUYe1OVz4T1A9Ed4XAjDE/uV0xjLTQitOdXtQczkmtMBfzqgDm/Wr+PLD9NV4K0yPPp8ezC2WkaHff+Ul6fCn/PKGx8mfFAeYmi6SoQGIFeVU+3rMayB26ujW5//yocQFiW8G+9coerQFEPw1DQvzNUERtrhZ5vdz9uR/JYxZwoSkkYjyWCqW+RuvhgJazJFSzpT8zQfPtx3f93qXjaX9EuEUyW41jA9WAlXLFryiwusAyS59OmIjpY8QtNPJi7pq3rplYdpIwcmGe3NLan8kcB8exG0HIn5SjcZ9u9vpT/vU3Rf/XUxi8FGPdZD0tzDtLz9grxGug5CDkGKV1X7zg4dadqe4P7KCzAAxReW70PSbf8/2ag539icqPdOZzpb0rU6u9EnFUcIfqHuRz/Ar3QuAF45GKgAAAAAElFTkSuQmCC" alt="edugram"><span class="lsep"></span>Creator Analytics</div>
+  <div class="hr" id="hr"></div>
+</div></header>
+
+<div class="testbar" id="testbar" style="display:none;"><div class="tbin">
+  <i class="ti ti-flask" style="font-size:15px;"></i>
+  <span>Тестовый режим — быстрое переключение:</span>
+  <div class="tsw" id="tsw">
+    <button data-r="land" onclick="go('land')">Лендинг</button>
+    <button data-r="creator" onclick="go('creator')">Креатор</button>
+    <button data-r="client" onclick="go('client')">Заказчик</button>
+    <button data-r="admin" onclick="go('admin')">Админ</button>
+  </div>
+  <button class="btn" style="padding:5px 11px;font-size:12px;" onclick="resetTour()"><i class="ti ti-refresh" style="font-size:14px;"></i>Сбросить «первый вход»</button>
+  <button class="btn" style="padding:5px 11px;font-size:12px;" onclick="doAuth(true)"><i class="ti ti-user-plus" style="font-size:14px;"></i>Показать регистрацию новичка</button>
+</div></div>
+
+<div class="backbar" id="backbar" style="display:none;"><div class="bbin">
+  <i class="ti ti-eye" style="font-size:16px;"></i>
+  <span>Смотрите кабинет глазами креатора <b id="asWho">—</b></span>
+  <button class="btn" onclick="go('admin')"><i class="ti ti-arrow-left"></i>Вернуться в админку</button>
+</div></div>
+
+<nav id="navbar" style="display:none;"><div class="nin" id="nav"></div></nav>
+
+<!-- ЛЕНДИНГ -->
+<div class="v on lp" id="v-land">
+
+  <div class="lhead"><div class="lwrap lhin">
+    <div class="lbrand" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <img class="egl2" id="lLogo" alt="edugram"><span class="sep2"></span><b>Creator Analytics</b>
+    </div>
+    <div class="lnav">
+      <a href="#money">Сколько платим</a>
+      <a href="#plays">Что снимать</a>
+      <a href="#how">Как это работает</a>
+      <a href="#now">Конкурсы</a>
+      <a href="#faq">Вопросы</a>
+    </div>
+    <div class="lhcta">
+      <button class="lhbtn" onclick="go('client')">Я заказчик</button>
+      <button class="lhbtn p" onclick="openAuth()">Начать зарабатывать</button>
+    </div>
+  </div></div>
+
+  <section class="hero">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <span class="blob b4"></span><span class="blob b5"></span><span class="blob b6"></span>
+
+    <div class="lwrap hcenter">
+      <div class="hbadges rv">
+        <span class="pill vio"><span class="px"></span> 245 креаторов</span>
+        <span class="pill">73 млн просмотров в месяц</span>
+        <span class="pill"><span class="dotl"></span> В августе разыгрываем 500 000 ₽</span>
+      </div>
+      <h1 class="rv">Вы уже <span class="vt">снимаете ролики</span> —<br><span class="hl">пора получать за них деньги</span></h1>
+      <p class="sub2 rv">Платим за просмотры роликов, за подписки по вашей ссылке и за приведённых креаторов. Смотрим на просмотры и вовлечённость, а не на количество подписчиков.</p>
+      <div class="hcta rv">
+        <button class="bigb p1" onclick="openAuth()">Начать зарабатывать →</button>
+        <button class="bigb p2" onclick="go('client')">Мне нужна реклама</button>
+      </div>
+      <div class="hnote rv"><span class="px" style="transform:scale(.65)"></span> Без вложений и комиссий. Офферы открываются сразу после одобрения заявки</div>
+    </div>
+
+    <div class="lwrap trust rv">
+      <div class="tl">Офферы на платформе</div>
+      <div class="row">
+        <span class="lg">Study AI</span><span class="lg">Кэмп</span><span class="lg">Автор24</span><span class="lg" style="opacity:.4">скоро ещё</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="rails">
+    <div class="lwrap rhead rv">
+      <div class="rttl">Ролики креаторов и <em>сколько принёс каждый</em></div>
+      <div class="rsub">Формула оплаты: просмотры × ставка оффера × коэффициент за формат</div>
+    </div>
+
+    <div class="railwrap" id="rail1">
+      <div class="rail"><div class="rtrack" id="track1"></div></div>
+      <span class="rveil"></span>
+      <span class="rhint">лента прокручивается — можно листать вручную</span>
+    </div>
+  </section>
+
+  <section class="nums"><div class="lwrap in">
+    <div><b>73<em> млн</em></b><span>просмотров в месяц</span></div>
+    <div><b class="lgn">2 000 000<em> ₽</em></b><span>выплачено креаторам за месяц</span></div>
+    <div><b>245</b><span>креаторов на платформе</span></div>
+    <div><b>3<em> модели</em></b><span>оплаты: фикс, просмотры или процент с продаж</span></div>
+  </div></section>
+
+  <section class="sec"><div class="lwrap">
+    <div class="shead">
+      <h2 class="stitle" id="money">Сколько выходит <em>за месяц</em></h2>
+      <p class="ssub">Три креатора с разными нишами и размером блога — от 40 до 390 тысяч рублей</p>
+    </div>
+    <div class="cases">
+      <div class="case">
+        <div class="who"><div class="av">01</div><div><b>Небольшой блог</b><span>обучение · 113 тыс. просмотров</span></div></div>
+        <div class="big2"><em>40 000 ₽</em></div>
+        <div class="cap">55 оплат за месяц</div>
+        <p class="quote">Небольшая аудитория, но высокая конверсия. Размер блога решает меньше, чем то, кому и как вы рассказываете.</p>
+      </div>
+      <div class="case">
+        <div class="who"><div class="av">02</div><div><b>Средний блог</b><span>видео-генерации · 1,4 млн просмотров</span></div></div>
+        <div class="big2"><em>126 000 ₽</em></div>
+        <div class="cap">просмотры + ссылка + промокод</div>
+        <p class="quote">Снимает то же, что и раньше. Разница в том, что теперь ролики отмечены под оффер и попадают в оплату.</p>
+      </div>
+      <div class="case">
+        <div class="who"><div class="av">03</div><div><b>Крупный блог</b><span>нейросети · 14 млн просмотров</span></div></div>
+        <div class="big2"><em>390 000 ₽</em></div>
+        <div class="cap">369 роликов за месяц</div>
+        <p class="quote">Большой поток контента и высокие просмотры. Платим за каждый размеченный ролик, процент с продаж начисляется сверху.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="sec"><div class="lwrap">
+    <div class="shead">
+      <h2 class="stitle" id="plays">Не нужно придумывать — <em>идея уже есть</em></h2>
+      <p class="ssub">Собираем тренды и разбираем ролики, которые приводят оплаты. Доступно с первого дня и бесплатно</p>
+    </div>
+    <div class="ideas">
+      <div class="idea">
+        <div class="ico"><i class="ti ti-flame"></i></div>
+        <b>Тренды недели</b>
+        <p>Какие форматы работают сейчас — по данным всех 245 креаторов, а не по подборкам из интернета.</p>
+        <div class="mt"><span class="dot"></span> обновляется каждый понедельник</div>
+      </div>
+      <div class="idea">
+        <div class="ico"><i class="ti ti-coin"></i></div>
+        <b>Продающие ролики</b>
+        <p>Список отсортирован не по просмотрам, а по оплатам. Виден формат, длительность, площадка и начало ролика.</p>
+        <div class="mt"><span class="dot"></span> такой статистики нет ни у кого на рынке</div>
+      </div>
+      <div class="idea">
+        <div class="ico"><i class="ti ti-clipboard-text"></i></div>
+        <b>Готовые сценарии</b>
+        <p>Сценарий разложен по секундам: начало, основная часть, финал и куда вести аудиторию. Остаётся снять.</p>
+        <div class="mt"><span class="dot"></span> под каждый оффер свои</div>
+      </div>
+      <div class="idea">
+        <div class="ico"><i class="ti ti-message-2"></i></div>
+        <b>Разбор ваших роликов</b>
+        <p>Почему один ролик принёс четырнадцать оплат, а другой с такими же просмотрами — ни одной. С цифрами.</p>
+        <div class="mt"><span class="dot"></span> после первых оплат</div>
+      </div>
+    </div>
+
+    <div class="freebar rvz">
+      <div class="fbl">
+        <b>Всё это бесплатно</b>
+        <span>Ничего покупать не нужно. Доступ открывается сразу после одобрения заявки.</span>
+      </div>
+      <ul>
+        <li><i>✓</i> Девять курсов Школы креаторов</li>
+        <li><i>✓</i> Чат на 162 человека</li>
+        <li><i>✓</i> Тема недели с коэффициентом ×1,2</li>
+        <li><i>✓</i> Личный менеджер после первых оплат</li>
+      </ul>
+      <button class="bigb p2" onclick="openAuth()">Получить доступ →</button>
+    </div>
+  </div></section>
+
+  <section class="sec alt"><div class="lwrap">
+    <div class="shead">
+      <h2 class="stitle" id="how">Как начать <em>зарабатывать</em></h2>
+      <p class="ssub">Четыре шага, всё вместе занимает один вечер. Дальше расчёт идёт автоматически</p>
+    </div>
+    <div class="steps2">
+      <div class="st2"><b>Подключите соцсети</b><p>Instagram, TikTok, YouTube или VK. Ролики загружаются автоматически, добавлять вручную не нужно.</p></div>
+      <div class="st2"><b>Выберите оффер</b><p>Сразу получите персональную ссылку и промокод по выбранному офферу.</p></div>
+      <div class="st2"><b>Снимите ролик</b><p>В кабинете видно, какие форматы работают у других. У темы недели повышенная ставка.</p></div>
+      <div class="st2"><b>Отметьте оффер</b><p>Укажите, под какой оффер снят ролик. Дальше начисления идут автоматически — за просмотры и за каждую покупку.</p></div>
+    </div>
+  </div></section>
+
+  <section class="sec"><div class="lwrap">
+    <div class="shead">
+      <h2 class="stitle" id="now">Идёт <em>прямо сейчас</em></h2>
+      <p class="ssub">Участвовать может любой креатор. Отдельная заявка не нужна — засчитываются обычные ролики</p>
+    </div>
+    <div class="lives">
+      <div class="live">
+        <span class="lbadge"><span class="dot"></span> до 31 августа</span>
+        <b>Больше всех оплат</b>
+        <div class="lsum">200 000 ₽</div>
+        <p>Считаем новые оплаты по вашей ссылке и промокоду на Study AI. Сейчас участвуют 34 креатора.</p>
+      </div>
+      <div class="live">
+        <span class="lbadge"><span class="dot"></span> до 31 августа</span>
+        <b>Самое вирусное видео</b>
+        <div class="lsum">250 000 ₽</div>
+        <p>Считаем просмотры одного ролика, продажи не учитываются. Сейчас участвуют 19 креаторов.</p>
+      </div>
+      <div class="live lm">
+        <span class="lbadge dk"><span class="dot"></span> тема недели</span>
+        <b>AI-карточки для маркетплейсов</b>
+        <div class="lsum">×1,2 к ставке</div>
+        <p>У роликов на эту тему сейчас самая высокая конверсия, поэтому коэффициент повышен до конца недели.</p>
+      </div>
+    </div>
+    <p class="lnote">Рейтинг обновляется <b>каждый день</b>: видно вашу позицию и сколько осталось до призового места. С 15 августа стартует конкурс на 50 000 ₽ — первые сто подписок Кэмпа.</p>
+  </div></section>
+
+  <section class="sec"><div class="lwrap">
+    <div class="shead">
+      <h2 class="stitle">Две <em>стороны платформы</em></h2>
+      <p class="ssub">Креаторы получают оплату за контент, компании — размещения с прозрачной статистикой</p>
+    </div>
+    <div class="split">
+      <div class="half dark">
+        <h3>Я креатор</h3>
+        <p class="hd">Веду блог и хочу, чтобы он приносил доход</p>
+        <ul class="flist">
+          <li><span class="tick">✓</span> Оплата за просмотры — даже если продаж не было</li>
+          <li><span class="tick">✓</span> 85% с первой подписки и 20% со всех повторных</li>
+          <li><span class="tick">✓</span> Денежные бонусы за приведённых креаторов — процент с их дохода и разовая выплата</li>
+          <li><span class="tick">✓</span> Школа креаторов: девять бесплатных курсов по заработку</li>
+          <li><span class="tick">✓</span> Конкурсы каждый месяц — в августе разыгрываем 500 000 ₽</li>
+        </ul>
+        <button class="bigb p2" style="width:100%;justify-content:center;" onclick="openAuth()">Начать зарабатывать</button>
+      </div>
+      <div class="half">
+        <h3>Я заказчик</h3>
+        <p class="hd">Нужны размещения у блогеров с понятным результатом</p>
+        <ul class="flist">
+          <li><span class="tick">✓</span> Ниши: образование, нейросети, маркетплейсы, финансы, товары</li>
+          <li><span class="tick">✓</span> Оплата за результат: процент с продаж или фикс за действие</li>
+          <li><span class="tick">✓</span> Подбираем креаторов под вашу аудиторию, а не рассылаем всем подряд</li>
+          <li><span class="tick">✓</span> Прозрачная статистика по каждому ролику и каждой оплате</li>
+          <li><span class="tick">✓</span> Отвечаем на заявку в течение рабочего дня</li>
+        </ul>
+        <button class="bigb p1" style="width:100%;justify-content:center;" onclick="go('client')">Оставить бриф</button>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="sec alt"><div class="lwrap">
+    <div class="shead" style="justify-content:center;">
+      <h2 class="stitle" id="faq" style="text-align:center;max-width:none;">Частые <em>вопросы</em></h2>
+    </div>
+    <div class="faq">
+      <div class="fq" onclick="this.classList.toggle('op')"><b>Сколько нужно подписчиков?<i>+</i></b><p>Формального порога по подписчикам нет. Мы смотрим на просмотры и вовлечённость аудитории. У креатора с лучшим результатом по продажам на платформе — 113 тысяч просмотров в месяц.</p></div>
+      <div class="fq" onclick="this.classList.toggle('op')"><b>Когда придут первые деньги?<i>+</i></b><p>Отмеченный ролик проверяем в течение суток, после этого начисление появляется в кабинете. Вывод — от 1 000 ₽. Напишите менеджеру, он переведёт сумму на баланс Edugram: дальше выводите сами в любой день или на карту, заявки принимаем по вторникам до 14:00.</p></div>
+      <div class="fq" onclick="this.classList.toggle('op')"><b>Сколько платят за ролик?<i>+</i></b><p>Просмотры умножаются на ставку оффера и на коэффициент за формат. На 100 000 просмотров упоминание вскользь даёт 750 ₽, а полный обзор с промокодом — 22 500 ₽. Процент с продаж начисляется отдельно и сверху.</p></div>
+      <div class="fq" onclick="this.classList.toggle('op')"><b>Нужно ли разбираться в нейросетях?<i>+</i></b><p>Нет. В школе девять бесплатных курсов — от первого ролика до карточек для маркетплейсов. Многие начинают без опыта и получают первые оплаты в течение месяца.</p></div>
+      <div class="fq" onclick="this.classList.toggle('op')"><b>Есть ли вложения или комиссии?<i>+</i></b><p>Нет. Участие бесплатное, покупать ничего не нужно. Ставка выплачивается полностью, площадка ничего не удерживает.</p></div>
+    </div>
+  </div></section>
+
+  <section class="sec" style="padding-top:0;"><div class="lwrap">
+    <div class="final">
+      <h2>Подключение занимает <em>один вечер</em></h2>
+      <p>Дальше ролики учитываются автоматически — за просмотры и за каждую покупку</p>
+      <div class="hcta">
+        <button class="bigb p1" onclick="openAuth()">Начать зарабатывать →</button>
+        <button class="bigb p2" onclick="go('client')">Мне нужна реклама</button>
+      </div>
+      <div class="fnote">В чате креаторов 162 человека: вопросы, разборы роликов и взаимопомощь. Задать вопрос можно до регистрации.</div>
+    </div>
+    <div class="lfoot">
+      Creator Analytics · платформа Edugram · <a href="https://t.me/edugramnews" target="_blank">@edugramnews</a> · <a href="#" onclick="go('admin');return false;">вход для команды</a>
+    </div>
+  </div></section>
+
+</div>
+
+<!-- ============ КРЕАТОР ============ -->
+<div class="v" id="v-creator"><div class="wrap">
+
+  <!-- ДАШБОРД СООБЩЕСТВА -->
+  <div class="pg on" id="p-c-dash">
+    <h1>Дашборд</h1>
+    <p class="sub">245 креаторов · 34 активны · 8 июля — 7 августа</p>
+    <div class="perbar perslot"></div>
+
+    <div class="cards" style="margin-bottom:18px;">
+      <div class="c"><div class="ic" style="background:var(--blue-bg);color:var(--blue);"><i class="ti ti-eye"></i></div><div class="n" data-agg="53322834" data-unit="m">53.3M</div><div class="l">Охваты сообщества</div></div>
+      <div class="c"><div class="ic" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-photo"></i></div><div class="n" data-agg="1825">1 825</div><div class="l">Роликов за период</div></div>
+      <div class="c"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-wallet"></i></div><div class="n" data-agg="315533" data-unit="r">315.5K ₽</div><div class="s">всем креаторам</div><div class="l">Выплачено за период</div></div>
+      <div class="c hi"><div class="ic" style="background:var(--pink-bg);color:var(--pink);"><i class="ti ti-medal"></i></div><div class="n">4 место</div><div class="s">твоя позиция</div><div class="l">В рейтинге месяца</div></div>
+    </div>
+
+    <div class="note"><i class="ti ti-bulb"></i><div>Смотри, что залетает у других: какой формат, какая площадка, под какой оффер размечено. Открывай ролики и разбирай подачу.</div></div>
+
+    <div class="box">
+      <div class="bh">Топ-15 роликов месяца<span class="qm" onclick="qq(event,'topvid')">?</span> <span class="mut">по просмотрам</span></div>
+      <div class="scroll"><table class="dt">
+        <thead><tr><th>#</th><th>Креатор</th><th>Соцсеть</th><th>Оффер</th><th>Просмотры</th><th>Лайки</th><th>ER</th><th></th></tr></thead>
+        <tbody id="topVid"></tbody>
+      </table></div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Топ-15 креаторов месяца<span class="qm" onclick="qq(event,'topcre')">?</span> <span class="mut">по оплатам</span></div>
+      <div class="scroll"><table class="dt">
+        <thead><tr><th>#</th><th>Креатор</th><th>Ур.</th><th>Охваты</th><th>ER</th><th>Роликов</th><th>Оплат</th></tr></thead>
+        <tbody id="topCre"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="pg" id="p-c-home">
+    <h1 id="cName">@marsedzhan</h1>
+    <p class="sub" id="cSub">ID 629398 · 8 июля — 7 августа</p>
+    <div class="perbar perslot"></div>
+
+    <div class="lvl">
+      <div class="bdg"><i class="ti ti-award"></i></div>
+      <div class="tx">
+        <b id="cLvl">Уровень 2 · Активный</b><span class="qm" onclick="qq(event,'level')">?</span>
+        <p id="cLvlTxt">Ещё 6 оплат — откроется Автор24, повышенный коэффициент за просмотры и персональный менеджер</p>
+        <div class="bar"><span id="cBar" style="width:58%"></span></div>
+        <div id="cGain" class="gain"></div>
+      </div>
+      <div style="text-align:right;"><div style="font-size:19px;font-weight:600;" id="cPay">14</div><div style="font-size:12px;color:var(--text-2);" id="cPayOf">из 20 оплат</div></div>
+    </div>
+
+    <h2 style="margin-top:0;">Доход за период<span class="qm" onclick="qq(event,'income')">?</span></h2>
+    <div class="cards" id="cInc"></div>
+
+    <h2>Статистика блога</h2>
+    <div class="cards" id="cStat"></div>
+
+    <h2>Мои инструменты<span class="qm" onclick="qq(event,'tools')">?</span></h2>
+    <div class="box"><div class="bp">
+      <div class="row"><label>Ссылка</label><input readonly id="cRef" value="https://studyai.ru/?ref=629398"><button class="btn" onclick="t('Скопировано')"><i class="ti ti-copy"></i></button></div>
+      <div class="row"><label>Промокод</label><input readonly id="cPromo" value="MARS10"><button class="btn" onclick="t('Скопировано')"><i class="ti ti-copy"></i></button></div>
+      <div class="row" id="balRow"><label>Баланс</label>
+        <span id="cBal" style="flex:1;font-size:15px;font-weight:600;color:var(--green);">15 053 ₽</span>
+        <a class="btn" href="https://edugram.com/withdraw" target="_blank" title="Страница вывода в Edugram"><i class="ti ti-external-link"></i></a>
+        <button class="btn p" onclick="openPay()"><i class="ti ti-cash"></i>Вывести средства</button>
+      </div>
+      <div class="row"><label>Соцсети</label>
+        <span class="plat"><i style="background:#E1306C;"><i class="ti ti-brand-instagram"></i></i></span>
+        <span class="plat"><i style="background:#111;"><i class="ti ti-brand-tiktok"></i></i></span>
+        <span class="plat"><i style="background:#FF0000;"><i class="ti ti-brand-youtube"></i></i></span>
+        <button class="btn" onclick="t('Подключение соцсети')"><i class="ti ti-plus"></i>Добавить</button>
+      </div>
+    </div></div>
+
+    <h2>История выводов<span class="qm" onclick="qq(event,'wd')">?</span></h2>
+    <div class="box"><div class="scroll"><table class="dt">
+      <thead><tr><th>Дата</th><th>Сумма</th><th>Способ</th><th>Роликов</th><th>Статус</th></tr></thead>
+      <tbody id="wdtb"></tbody>
+    </table></div></div>
+
+  </div>
+
+  <!-- ВИДЕО -->
+  <div class="pg" id="p-c-videos">
+    <h1>Мои видео<span class="qm" onclick="qq(event,'vids')">?</span></h1>
+    <p class="sub">Оплата: просмотры × ставка оффера × коэффициент за формат. В оплату идут ролики от 5 000 просмотров</p>
+    <div class="perbar perslot"></div>
+
+    <div class="note" id="markNote"><i class="ti ti-info-circle"></i><div>Ролики подтягиваются сами. Чтобы получить за ролик деньги — отметь, под какой оффер он снят и какой это формат. Неразмеченные ролики на проверку не уходят и не оплачиваются. Разметить можно в течение 14 дней после публикации.</div></div>
+
+    <div class="box">
+      <div class="bh" id="calcBox">Калькулятор<span class="qm" onclick="qq(event,'calc')">?</span> <span class="mut">посчитай, сколько принесёт ролик</span></div>
+      <div class="bp">
+        <div class="calc">
+          <div class="f"><label>Просмотры</label><input type="number" id="cv" value="100000" oninput="calc()"></div>
+          <div class="f"><label>Оффер</label><select id="cr" onchange="calc()">
+            <option value="0.15">Study AI</option>
+            <option value="0.20">Кэмп</option>
+            <option value="0.10">Автор24</option>
+          </select></div>
+          <div class="f"><label>Формат ролика</label><select id="ck" onchange="calc()">
+            <option value="0.05">0,05 — просто упоминание</option>
+            <option value="0.3">0,3 — мини-туториал</option>
+            <option value="0.7">0,7 — полный туториал</option>
+            <option value="1" selected>1 — туториал с разбором возможностей</option>
+            <option value="1.5">1,5 — обзор + название + промокод</option>
+          </select></div>
+        </div>
+        <div class="res"><span id="cf">100 000 × 0,15 ₽ × 1</span><b id="co">15 000 ₽</b></div>
+      </div>
+    </div>
+
+    <div class="box" id="vidBox">
+      <div class="bh">Ролики за период<span class="qm" onclick="qq(event,'vids')">?</span>
+        <button class="btn p" onclick="t('Форма добавления видео')"><i class="ti ti-plus"></i>Добавить видео</button>
+      </div>
+      <div class="scroll"><table class="dt">
+        <thead><tr><th>Соцсеть</th><th class="hi">Оффер и формат</th><th>Дата</th><th>Охваты</th><th>ER</th><th>Статус</th><th>Доход</th><th></th></tr></thead>
+        <tbody id="vtb"></tbody>
+      </table></div>
+    </div>
+
+    <div class="note" id="vidHint"><i class="ti ti-bulb"></i><div>Ролик на 694K просмотров принёс 0 ₽ — он не размечен. При формате «полный туториал» это было бы больше 70 000 ₽. Разметить = получить деньги за то, что уже снято.</div></div>
+  </div>
+
+  <!-- ОФФЕРЫ -->
+  <div class="pg" id="p-c-offers">
+    <h1>Офферы<span class="qm" onclick="qq(event,'offers')">?</span></h1>
+    <p class="sub">Выбирай, что продвигать. Ссылка и промокод выдаются сразу после подключения</p>
+    <div id="offers"></div>
+
+    <h2>Задание недели<span class="qm" onclick="qq(event,'week')">?</span></h2>
+    <div class="box"><div class="bp" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+      <div style="flex:1;min-width:230px;">
+        <b style="font-size:14px;" id="wkTitle">—</b>
+        <p style="font-size:12.5px;color:var(--text-2);margin:4px 0 0;line-height:1.5;" id="wkDesc">—</p>
+      </div>
+      <button class="btn p" onclick="t('Тема взята в работу')"><i class="ti ti-player-play"></i>Взять тему</button>
+    </div></div>
+  </div>
+
+  <!-- ШКОЛА -->
+  <div class="pg" id="p-c-school">
+    <h1>Школа креаторов<span class="qm" onclick="qq(event,'school')">?</span></h1>
+    <p class="sub">Бесплатно · 9 курсов · доступ открыт</p>
+    <div class="note"><i class="ti ti-bulb"></i><div>Курсы не про нейросети вообще, а про то, как на них зарабатывать. Проходишь — открываются офферы, повышается коэффициент, подключается менеджер.</div></div>
+    <div class="box">
+      <div class="bh">Мой прогресс<span class="qm" onclick="qq(event,'school')">?</span> <span class="mut" id="schMineProgress">— из 9 курсов</span></div>
+      <div id="schoolMineList"></div>
+    </div>
+    <h2>Что даёт прохождение</h2>
+    <div class="box"><div class="bp">
+      <div class="st"><div class="num ok"><i class="ti ti-check"></i></div><div><b>Доступ к закрытым офферам</b><p>Часть офферов открывается только после профильного курса.</p></div></div>
+      <div class="st"><div class="num">2</div><div><b>Персональный менеджер</b><p>После первых оплат подключается человек, который помогает довести воронку.</p></div></div>
+      <div class="st"><div class="num">3</div><div><b>Повышенный коэффициент</b><p>Выпускникам курса коэффициент за ролики считается по верхней планке.</p></div></div>
+    </div></div>
+  </div>
+
+  <!-- СКАУТИНГ -->
+  <div class="pg" id="p-c-scout">
+    <h1>Скаутинг<span class="qm" onclick="qq(event,'scout')">?</span></h1>
+    <p class="sub">Приводи креаторов — получай 5% с их оплат, пока они работают</p>
+    <div class="cards" style="margin-bottom:18px;">
+      <div class="c"><div class="ic" style="background:var(--pink-bg);color:var(--pink);"><i class="ti ti-users-group"></i></div><div class="n" id="scMineInvited">—</div><div class="l">Приведено</div></div>
+      <div class="c"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-check"></i></div><div class="n" id="scMineActive">—</div><div class="l">Дошли до оплат</div></div>
+      <div class="c"><div class="ic" style="background:var(--blue-bg);color:var(--blue);"><i class="ti ti-shopping-cart"></i></div><div class="n" id="scMinePayments">—</div><div class="l">Оплат от них</div></div>
+      <div class="c hi"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-wallet"></i></div><div class="n" id="scMineEarned">—</div><div class="s">за месяц</div><div class="l">Доход со скаутинга</div></div>
+    </div>
+
+    <div class="box"><div class="bp">
+      <div class="row"><label>Ссылка скаута</label><input readonly id="scoutLink" value=""><button class="btn" onclick="t('Скопировано')"><i class="ti ti-copy"></i></button></div>
+      <div class="note" style="margin:14px 0 0;"><i class="ti ti-coin"></i><div><b>5% от дохода приведённого — пожизненно.</b> Пока он зарабатывает, ты получаешь свой процент. Плюс 2 500 ₽ разово, когда он сделает первые 5 оплат.<br><br>Считается только доход с продаж. Оплата за просмотры в скаутинг не входит. У приведённого ничего не вычитается — 5% платит площадка сверху.</div></div>
+    </div></div>
+
+    <div class="box">
+      <div class="bh">Мои креаторы<span class="qm" onclick="qq(event,'scout')">?</span> <span class="mut">связь фиксируется один раз и не меняется</span></div>
+      <div class="scroll"><table class="dt">
+        <thead><tr><th>Креатор</th><th>ID</th><th>Дата</th><th>Этап</th><th>Оплат</th><th>Сумма оплат</th><th>Мои 5%</th></tr></thead>
+        <tbody id="scoutMineTb"></tbody>
+      </table></div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Как это работает</div>
+      <div class="bp">
+        <div class="st"><div class="num ok"><i class="ti ti-check"></i></div><div><b>Отправь свою ссылку</b><p>Человек регистрируется по ней — и сразу закрепляется за тобой. Это та же партнёрская регистрация, что уже работает в системе, ничего нового настраивать не нужно.</p></div></div>
+        <div class="st"><div class="num">2</div><div><b>Один скаут на человека</b><p>Кто зафиксирован первым, тот и остаётся. Переписать связку задним числом нельзя — это защищает и тебя, и новичка.</p></div></div>
+        <div class="st"><div class="num">3</div><div><b>Связка навсегда</b><p>Пока приведённый работает — ты получаешь свои 5%. Без ограничения по сроку.</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- КОНКУРСЫ -->
+  <div class="pg" id="p-c-top">
+    <div id="ctList">
+      <h1>Конкурсы<span class="qm" onclick="qq(event,'contests')">?</span></h1>
+      <p class="sub">Участвовать может каждый. Рейтинг обновляется каждый день</p>
+      <div class="filters" id="ctFilters"></div>
+      <div id="ctCards"></div>
+    </div>
+
+    <div id="ctDetail" style="display:none;">
+      <button class="btn" style="margin-bottom:16px;" onclick="ctBack()"><i class="ti ti-arrow-left"></i>Все конкурсы</button>
+      <h1 id="ctdName">—</h1>
+      <p class="sub" id="ctdSub">—</p>
+      <div class="cards" style="margin-bottom:18px;" id="ctdCards"></div>
+      <div class="note" id="ctdRules"><i class="ti ti-info-circle"></i><div></div></div>
+      <div class="box">
+        <div class="bh">Рейтинг <span class="mut" id="ctdUpd">обновлён сегодня в 09:00</span></div>
+        <div id="ctdBoard"></div>
+      </div>
+      <div class="box"><div class="bh">Призовой фонд</div><div class="bp" id="ctdPrizes"></div></div>
+    </div>
+  </div>
+
+</div></div>
+
+<!-- ============ ЗАКАЗЧИК ============ -->
+<div class="v" id="v-client"><div class="wrap" style="max-width:760px;">
+  <div class="pg on" id="p-k-brief">
+    <h1>Бриф на размещение</h1>
+    <p class="sub">Расскажите о продукте — подберём креаторов под вашу нишу и вернёмся с предложением</p>
+
+    <div class="box">
+      <div class="bh">О продукте</div>
+      <div class="bp">
+        <div class="row"><label>Компания</label><input id="brCompany" placeholder="Название" style="background:#fff;color:var(--text);"></div>
+        <div class="row"><label>Сайт</label><input id="brSite" placeholder="https://" style="background:#fff;color:var(--text);"></div>
+        <div class="row"><label>Ниша</label><select id="brNiche" style="flex:1;">
+          <option>Образование</option><option>Нейросети и AI</option><option>Маркетплейсы</option>
+          <option>Финансы</option><option>Товары</option><option>Другое</option>
+        </select></div>
+        <div style="margin-top:12px;"><label style="font-size:12.5px;color:var(--text-2);display:block;margin-bottom:5px;">Что нужно рассказать аудитории</label>
+        <textarea id="brMessage" placeholder="Продукт, ключевые сообщения, что показать в ролике"></textarea></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Модель оплаты</div>
+      <div class="bp">
+        <div class="row"><label>Формат</label><select style="flex:1;" id="bm" onchange="bmch()">
+          <option value="rev">Процент с продаж (RevShare)</option>
+          <option value="fix">Фикс за целевое действие</option>
+          <option value="views">Оплата за просмотры</option>
+        </select></div>
+        <div id="bmf">
+          <div class="row"><label>Первая оплата</label><input placeholder="85 %" style="background:#fff;color:var(--text);"></div>
+          <div class="row"><label>Повторные</label><input placeholder="20 %" style="background:#fff;color:var(--text);"></div>
+        </div>
+        <div class="row"><label>Бюджет на тест</label><input id="brBudget" placeholder="₽" style="background:#fff;color:var(--text);"></div>
+        <div class="row"><label>Гео</label><input id="brGeo" placeholder="Россия, Казахстан" style="background:#fff;color:var(--text);"></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Контакт</div>
+      <div class="bp">
+        <div class="row"><label>Имя</label><input id="brName" style="background:#fff;color:var(--text);"></div>
+        <div class="row"><label>Телеграм</label><input id="brTg" placeholder="@nickname" style="background:#fff;color:var(--text);"></div>
+      </div>
+    </div>
+
+    <button class="btn p lg" onclick="submitBrief()"><i class="ti ti-send"></i>Отправить бриф</button>
+  </div>
+</div></div>
+
+<!-- ============ АДМИН ============ -->
+<div class="v" id="v-admin"><div class="wrap">
+  <div class="pg on" id="p-a-creators">
+    <h1>Креаторы<span class="qm" onclick="qq(event,'acre')">?</span></h1>
+    <p class="sub">245 в базе · 34 активны · 8 июля — 7 августа</p>
+    <div class="perbar perslot"></div>
+    <div class="cards" style="margin-bottom:18px;">
+      <div class="c"><div class="ic" style="background:var(--blue-bg);color:var(--blue);"><i class="ti ti-eye"></i></div><div class="n" data-agg="53322834" data-unit="m">53.3M</div><div class="l">Охваты</div></div>
+      <div class="c"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-player-play"></i></div><div class="n" data-agg="258105" data-unit="r">258.1K ₽</div><div class="l">За просмотры</div></div>
+      <div class="c hi"><div class="ic" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-shopping-cart"></i></div><div class="n" data-agg="57428" data-unit="r">57.4K ₽</div><div class="s">рефки + промокоды</div><div class="l">С продаж</div></div>
+      <div class="c hi"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-wallet"></i></div><div class="n" data-agg="315533" data-unit="r">315.5K ₽</div><div class="l">Итого</div></div>
+    </div>
+    <div class="note"><i class="ti ti-info-circle"></i><div>Фиолетовое — то, чего сейчас в аналитике нет. @sochi_nat: за просмотры 0 ₽, по рефке 31 321 ₽. Приносит больше всех, а в кабинете видит ноль.</div></div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+      <div class="search" style="flex:1;min-width:200px;margin:0;"><i class="ti ti-search"></i><input id="q" placeholder="Поиск по нику" oninput="r()"></div>
+      <button class="btn" onclick="expCSV()"><i class="ti ti-download"></i>Выгрузить</button>
+    </div>
+    <div class="filters" id="crFilters"></div>
+    <div class="box"><div class="scroll"><table class="dt">
+      <thead><tr><th>Ник</th><th>ID</th><th>Ур.</th><th>Охваты</th><th>ER</th><th>За просмотры</th>
+      <th class="hi">Рефка</th><th class="hi">Промокод</th><th class="hi">Итого</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div></div>
+  </div>
+
+  <div class="pg" id="p-a-offers">
+    <h1>Офферы<span class="qm" onclick="qq(event,'offers')">?</span></h1>
+    <p class="sub">Что видят креаторы и как настроены ставки</p>
+    <div class="box"><div class="scroll"><table class="dt">
+      <thead><tr><th>Оффер</th><th>Модель</th><th>Ставка</th><th>За просмотр</th><th>Подключено</th><th>Оплат</th><th>Доступ</th></tr></thead>
+      <tbody id="adminOffersTb"></tbody>
+    </table></div></div>
+  </div>
+
+  <div class="pg" id="p-a-mod">
+    <h1>Проверка роликов<span class="qm" onclick="qq(event,'amod')">?</span></h1>
+    <p class="sub">Только размеченные креаторами ролики от 5 000 просмотров</p>
+    <div class="perbar perslot"></div>
+
+    <div class="cards" style="margin-bottom:18px;">
+      <div class="c"><div class="ic" style="background:#F1F1F5;color:var(--text-2);"><i class="ti ti-video"></i></div><div class="n" data-agg="1825">1 825</div><div class="s">всё, что вышло</div><div class="l">Роликов за месяц</div></div>
+      <div class="c"><div class="ic" style="background:var(--blue-bg);color:var(--blue);"><i class="ti ti-filter"></i></div><div class="n" data-agg="694">694</div><div class="s">остальные меньше 5 000</div><div class="l">Прошли порог</div></div>
+      <div class="c"><div class="ic" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-tag"></i></div><div class="n" data-agg="242">242</div><div class="s">остальные не заявлены</div><div class="l">Размечено креаторами</div></div>
+      <div class="c hi"><div class="ic" style="background:var(--amber-bg);color:var(--amber);"><i class="ti ti-eye"></i></div><div class="n">7</div><div class="s">в день</div><div class="l">Смотреть руками</div></div>
+    </div>
+
+    <div class="note"><i class="ti ti-bulb"></i><div>Раньше нужно было просматривать все 1 825 роликов. Теперь очередь фильтруется трижды: порог в 5 000 просмотров, разметка самим креатором и автоприём коэффициента 0,05. До ручной проверки доходит около 7 роликов в день.</div></div>
+
+    <div class="box">
+      <div class="bh">Очередь на проверку<span class="qm" onclick="qq(event,'amod')">?</span> <span class="mut">креатор уже указал формат — остаётся подтвердить или поправить</span></div>
+      <div class="scroll"><table class="dt">
+        <thead><tr><th>Креатор</th><th>Соцсеть</th><th>Просмотры</th><th>Оффер</th><th>Заявленный формат</th><th>К оплате</th><th>Поставить коэффициент</th></tr></thead>
+        <tbody id="modtb"></tbody>
+      </table></div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Уже принятые<span class="qm" onclick="qq(event,'adone')">?</span> <span class="mut">можно поправить, если ошиблись — деньги пересчитаются</span></div>
+      <div style="padding:14px 18px 0;"><div class="search" style="margin-bottom:0;"><i class="ti ti-search"></i><input id="dq" placeholder="Поиск по креатору" oninput="drawDone()"></div></div>
+      <div class="scroll"><table class="dt">
+        <thead><tr><th>Креатор</th><th>Соцсеть</th><th>Просмотры</th><th>Оффер</th><th>Принял</th><th>Начислено</th><th>Изменить коэффициент</th><th></th></tr></thead>
+        <tbody id="donetb"></tbody>
+      </table></div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Автоприём<span class="qm" onclick="qq(event,'aauto')">?</span></div>
+      <div class="bp">
+        <div class="row"><label>Принимать сразу</label>
+          <div class="krow">
+            <button class="kbtn on" onclick="t('Автоприём для 0,05')">0,05</button>
+            <button class="kbtn" onclick="t('Требует проверки')">0,3</button>
+            <button class="kbtn" onclick="t('Требует проверки')">0,7</button>
+            <button class="kbtn" onclick="t('Требует проверки')">1</button>
+            <button class="kbtn" onclick="t('Требует проверки')">1,5</button>
+          </div>
+        </div>
+        <div class="note" style="margin:14px 0 0;"><i class="ti ti-shield-check"></i><div>Без проверки принимается только самый низкий коэффициент 0,05 — простое упоминание. Завышать его смысла нет: это минимальная ставка, а риск ошибки копеечный.<br><br>Всё, что выше, смотрится руками. Сейчас это 97 роликов в месяц уходят на автоприём, 145 остаются в очереди — около 7 в день. Автопринятые тоже видны в списке выше, их можно поправить в любой момент.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg" id="p-a-contests">
+    <h1>Конкурсы<span class="qm" onclick="qq(event,'contests')">?</span></h1>
+    <p class="sub">Конкурсы идут по разделам офферов. Участвовать может любой креатор</p>
+    <div class="cards" style="margin-bottom:18px;">
+      <div class="c"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-trophy"></i></div><div class="n" id="acLive">—</div><div class="l">Идут сейчас</div></div>
+      <div class="c"><div class="ic" style="background:var(--amber-bg);color:var(--amber);"><i class="ti ti-clock"></i></div><div class="n" id="acPlanned">—</div><div class="l">Запланировано</div></div>
+      <div class="c"><div class="ic" style="background:var(--blue-bg);color:var(--blue);"><i class="ti ti-users"></i></div><div class="n" id="acPeople">—</div><div class="l">Участников</div></div>
+      <div class="c hi"><div class="ic" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-coin"></i></div><div class="n" id="acFund">—</div><div class="s">по всем конкурсам</div><div class="l">Призовой фонд</div></div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-bottom:14px;"><button class="btn p" onclick="t('Форма создания конкурса')"><i class="ti ti-plus"></i>Создать конкурс</button></div>
+    <div class="box"><div class="scroll"><table class="dt">
+      <thead><tr><th>Конкурс</th><th>Оффер</th><th>Метрика</th><th>Период</th><th>Участников</th><th>Фонд</th><th>Статус</th></tr></thead>
+      <tbody id="adminContestsTb"></tbody>
+    </table></div></div>
+    <div class="note"><i class="ti ti-bulb"></i><div>Конкурс на вирусное видео работает на охваты, конкурс на оплаты — на выручку. Держать оба сразу выгоднее: те, у кого большие охваты но слабая конверсия, всё равно участвуют и не выпадают из системы.</div></div>
+  </div>
+
+  <div class="pg" id="p-a-rates">
+    <h1>Ставки и коэффициенты</h1>
+    <p class="sub">Оплата за просмотры: просмотры × базовая ставка × коэффициент. Минимум 5 000 просмотров</p>
+
+    <div class="box">
+      <div class="bh">Базовая ставка по офферам<span class="qm" onclick="qq(event,'arate')">?</span> <span class="mut">меняется отдельно для каждого</span></div>
+      <div class="bp" id="ratesList"></div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Надбавка за уровень<span class="qm" onclick="qq(event,'alvl')">?</span> <span class="mut">уровень по оплатам за последние 30 дней, пересматривается ежемесячно и может снизиться</span></div>
+      <div class="bp" id="lvlList"></div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Коэффициенты по формату ролика<span class="qm" onclick="qq(event,'acoef')">?</span></div>
+      <div class="bp" id="coefList"></div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Порог оплаты<span class="qm" onclick="qq(event,'amin')">?</span></div>
+      <div class="bp">
+        <div class="row"><label>Минимум просмотров</label>
+          <div class="stepper"><input type="number" id="minv" value="5000" oninput="prev();scheduleSaveRates();"> <span style="font-size:12.5px;color:var(--text-2);">просмотров</span></div>
+        </div>
+        <div class="note" style="margin:14px 0 0;"><i class="ti ti-calculator"></i><div id="prevTxt">—</div></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="bh">Тема недели<span class="qm" onclick="qq(event,'week')">?</span> <span class="mut">видна всем креаторам на вкладке «Офферы»</span></div>
+      <div class="bp">
+        <div class="row"><label>Оффер</label><select id="wtAdminOffer" style="flex:1;">
+          <option>Study AI</option><option>Кэмп</option><option>Автор24</option>
+        </select></div>
+        <div class="row"><label>Множитель</label><div class="stepper"><input type="number" step="0.1" id="wtAdminMult" value="1.2"></div></div>
+        <div class="row"><label>Название</label><input id="wtAdminTitle" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: AI-карточки для маркетплейсов"></div>
+        <div style="margin-top:12px;"><label style="font-size:12.5px;color:var(--text-2);display:block;margin-bottom:5px;">Описание</label>
+        <textarea id="wtAdminDesc" placeholder="Почему эта тема сейчас выгоднее остальных"></textarea></div>
+        <div style="margin-top:12px;"><button class="btn p" onclick="saveWeekTheme()"><i class="ti ti-check"></i>Сохранить тему недели</button></div>
+      </div>
+    </div>
+
+    <button class="btn p lg" onclick="saveRatesNow()"><i class="ti ti-check"></i>Сохранить</button>
+  </div>
+
+  <div class="pg" id="p-a-pay">
+    <h1>Выплаты<span class="qm" onclick="qq(event,'apay')">?</span></h1>
+    <p class="sub">Заявки креаторов на вывод. Сюда падает всё, что креатор отправил из своего баланса</p>
+    <div class="cards" style="margin-bottom:18px;" id="payCards"></div>
+
+    <div class="note"><i class="ti ti-calendar"></i><div>Переводы на карты уходят одним реестром по вторникам до 14:00 — берите в работу всё, что накопилось к понедельнику. Вывод из ЛК Edugram креатор делает сам, от нас нужно только начислить сумму на баланс.</div></div>
+
+    <div class="box">
+      <div class="bh">Заявки на выплату<span class="qm" onclick="qq(event,'apayq')">?</span> <span class="mut">сумма фиксируется в момент заявки и уже списана с баланса креатора</span></div>
+      <div class="scroll"><table class="dt">
+        <thead><tr><th>Креатор</th><th>ID</th><th>Сумма</th><th>Способ</th><th>Роликов</th><th>Заявка</th><th>Статус</th><th></th></tr></thead>
+        <tbody id="payTb"></tbody>
+      </table></div>
+    </div>
+
+    <div class="note" style="margin-top:14px;"><i class="ti ti-info-circle"></i><div>Пока заявка не закрыта, ролики из неё помечены у креатора как «выведено» и повторно в вывод не попадут. Если отклонить заявку — сумма вернётся креатору на баланс, а ролики снова станут доступны к выводу.</div></div>
+  </div>
+
+  <div class="pg" id="p-a-brief">
+    <h1>Заявки заказчиков<span class="qm" onclick="qq(event,'abrief')">?</span></h1>
+    <p class="sub">Брифы с лендинга</p>
+    <div class="box"><div class="scroll"><table class="dt" style="min-width:auto;">
+      <thead><tr><th>Компания</th><th>Ниша</th><th>Модель</th><th>Бюджет</th><th>Дата</th><th>Статус</th></tr></thead>
+      <tbody id="briefsTb"></tbody>
+    </table></div></div>
+  </div>
+
+  <div class="pg" id="p-a-school">
+    <h1>Школа<span class="qm" onclick="qq(event,'aschool')">?</span></h1>
+    <p class="sub">Прохождение курсов и влияние на результат</p>
+    <div class="perbar perslot"></div>
+    <div class="cards" style="margin-bottom:18px;">
+      <div class="c"><div class="ic" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-school"></i></div><div class="n" id="schStarted">—</div><div class="l">Начали обучение</div></div>
+      <div class="c"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-certificate"></i></div><div class="n" id="schCompleted">—</div><div class="l">Прошли курс</div></div>
+      <div class="c hi"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-trending-up"></i></div><div class="n" id="schMult">—</div><div class="s">против непрошедших</div><div class="l">Оплат у выпускников</div></div>
+    </div>
+    <div class="box"><div class="scroll"><table class="dt" style="min-width:auto;">
+      <thead><tr><th>Курс</th><th>Начали</th><th>Прошли</th><th>Дошли до оплат</th></tr></thead>
+      <tbody id="schoolAdminTb"></tbody>
+    </table></div></div>
+  </div>
+
+  <div class="pg" id="p-a-scout">
+    <h1>Скаутинг<span class="qm" onclick="qq(event,'scout')">?</span></h1>
+    <p class="sub">Кто кого привёл и что из этого вышло</p>
+    <div class="perbar perslot"></div>
+    <div class="cards" style="margin-bottom:18px;">
+      <div class="c"><div class="ic" style="background:var(--pink-bg);color:var(--pink);"><i class="ti ti-users-group"></i></div><div class="n" id="scAdmInvited">—</div><div class="l">Пришли по скаутингу</div></div>
+      <div class="c"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-check"></i></div><div class="n" id="scAdmActivated">—</div><div class="l">Из них активны</div></div>
+      <div class="c hi"><div class="ic" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-percentage"></i></div><div class="n" id="scAdmRate">—</div><div class="s">против 14% у холодных</div><div class="l">Активация</div></div>
+    </div>
+    <div class="note"><i class="ti ti-bulb"></i><div>Приведённые своими активируются втрое чаще найденных вручную. Самый дешёвый канал набора. Связка «кто кого привёл» берётся из поля «Источник прихода» в эдуграме — отдельный учёт вести не нужно.</div></div>
+    <div class="box"><div class="scroll"><table class="dt" style="min-width:auto;">
+      <thead><tr><th>Скаут</th><th>ID</th><th>Привёл</th><th>Дошли до оплат</th><th>Их оплат</th><th>Сумма оплат</th><th>Выплачено скауту</th><th></th></tr></thead>
+      <tbody id="scoutAdminTb"></tbody>
+    </table></div></div>
+    <div class="note" style="background:#FFF8E6;color:#7A5B10;"><i class="ti ti-alert-triangle"></i><div>Связка бессрочная: скаут получает процент, пока приведённый работает. Что осталось решить — как ловить самопривод на вторую почту и нужен ли разрыв связки вручную.</div></div>
+  </div>
+</div></div>
+
+<div class="ov" id="ovMark" onclick="if(event.target===this)closeMark()">
+  <div class="md" style="max-width:520px;">
+    <div class="mdh">
+      <div><h3 id="mkT">—</h3><p id="mkS">—</p></div>
+      <button class="mdx" onclick="closeMark()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb" id="mkB"></div>
+    <div style="padding:0 22px 22px;display:flex;gap:9px;">
+      <button class="btn p" style="flex:1;justify-content:center;" onclick="markSend()"><i class="ti ti-send"></i>Отправить на проверку</button>
+      <button class="btn" onclick="closeMark()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovPay" onclick="if(event.target===this)closePay()">
+  <div class="md">
+    <div class="mdh">
+      <div><h3>Вывести средства</h3><p>Доступно к выводу: <b id="payBal" style="color:var(--green)">15 053 ₽</b></p></div>
+      <button class="mdx" onclick="closePay()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb">
+      <div class="pmlabel">Куда перевести</div>
+
+      <div class="pm on" id="pmCard" onclick="pickPay('card')">
+        <span class="pmi" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-credit-card"></i></span>
+        <span class="pmt">
+          <b>На карту</b>
+          <em>Переводим по вторникам до 14:00. Заявки после — в следующий вторник.</em>
+        </span>
+        <span class="pmc"><i class="ti ti-check"></i></span>
+      </div>
+
+      <div class="pm" id="pmEdu" onclick="pickPay('edu')">
+        <span class="pmi" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-wallet"></i></span>
+        <span class="pmt">
+          <b>На баланс Edugram</b>
+          <em>Начислим на счёт — дальше выводите сами в любой день.</em>
+        </span>
+        <span class="pmc"><i class="ti ti-check"></i></span>
+      </div>
+
+      <button class="btn p" style="width:100%;justify-content:center;margin-top:16px;padding:13px;" onclick="doWithdraw()"><i class="ti ti-brand-telegram"></i>Создать заявку и написать менеджеру</button>
+      <div class="pmfoot">
+        Ролики из этой заявки пометим как «выведено» · <a href="https://edugram.com/withdraw" target="_blank">Вывод в Edugram</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="npanel">
+  <div class="nh">Уведомления <button onclick="readAll()">Прочитать все</button></div>
+  <div class="nl" id="nlist"></div>
+  <div style="padding:11px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:7px;">
+    <i class="ti ti-brand-telegram" style="color:#2AABEE;font-size:14px;"></i>Дублируются в телеграм-бота
+  </div>
+</div>
+
+<div class="ov" id="ovAuth">
+  <div class="md" style="max-width:400px;">
+    <div class="mdh" style="padding-bottom:8px;">
+      <div><h3>Вход для креаторов</h3><p>Всё через телеграм-бота — пароли не нужны</p></div>
+      <button class="mdx" onclick="closeAuth()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb">
+      <button class="btn p" style="width:100%;justify-content:center;padding:13px;" onclick="doAuth(false)"><i class="ti ti-brand-telegram"></i>Войти</button>
+      <div style="text-align:center;margin:14px 0 12px;font-size:12.5px;color:var(--text-muted);">Впервые здесь?</div>
+      <button class="btn" style="width:100%;justify-content:center;" onclick="doAuth(true)"><i class="ti ti-user-plus"></i>Подать заявку</button>
+      <div class="note" style="margin:16px 0 0;"><i class="ti ti-info-circle"></i><div>Бот выдаёт личную ссылку — по ней вы и заходите в кабинет. Новым сначала нужно дождаться одобрения заявки.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovWelcome">
+  <div class="md" style="max-width:520px;">
+    <div class="mdh">
+      <div><h3 id="wT">Добро пожаловать</h3><p id="wS">Осталось четыре шага до первых денег</p></div>
+      <button class="mdx" onclick="closeWelcome(false)"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb" id="wB"></div>
+    <div style="padding:0 22px 22px;display:flex;gap:9px;">
+        <button class="btn p" style="flex:1;justify-content:center;" onclick="closeWelcome(true)"><i class="ti ti-route"></i>Показать, что где</button>
+        <button class="btn" onclick="closeWelcome()">Разберусь сам</button>
+      </div>
+  </div>
+</div>
+
+<div class="ov" id="ovReason" onclick="if(event.target===this)closeReason()">
+  <div class="md" style="max-width:420px;">
+    <div class="mdh">
+      <div><h3>Почему меняем коэффициент</h3><p id="rsSub">—</p></div>
+      <button class="mdx" onclick="closeReason()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb">
+      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:8px;">Причина уйдёт креатору в уведомление</div>
+      <div id="rsQuick" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px;"></div>
+      <textarea id="rsTxt" placeholder="Или напишите своими словами"></textarea>
+      <div style="display:flex;gap:9px;margin-top:12px;">
+        <button class="btn p" style="flex:1;justify-content:center;" onclick="applyReason()"><i class="ti ti-check"></i>Применить</button>
+        <button class="btn" onclick="closeReason()">Отмена</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovSent">
+  <div class="md" style="max-width:400px;">
+    <div class="mdb" style="padding:30px 24px 24px;text-align:center;">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;"><i class="ti ti-check"></i></div>
+      <h3 style="font-size:18px;font-weight:600;margin:0 0 8px;">Бриф отправлен</h3>
+      <p style="font-size:13.5px;color:var(--text-2);line-height:1.6;margin:0 0 18px;">Свяжемся в течение рабочего дня: подберём креаторов под вашу нишу и вернёмся с предложением и сроками.</p>
+      <a class="btn p" style="width:100%;justify-content:center;margin-bottom:9px;" href="https://t.me/natali_edugram" target="_blank"><i class="ti ti-brand-telegram"></i>Написать нам сразу</a>
+      <button class="btn" style="width:100%;justify-content:center;" onclick="closeSent()">Понятно</button>
+    </div>
+  </div>
+</div>
+
+<div id="qpop"></div>
+
+<div id="tourDim"></div>
+<div id="tourRing"></div>
+<div id="tourTip">
+  <p class="tt" id="tourT">—</p>
+  <p class="td" id="tourD">—</p>
+  <div id="tourArt"></div>
+  <div class="tf">
+    <span class="tc" id="tourC">1 / 9</span>
+    <button class="tskip" onclick="tourEnd()">Пропустить</button>
+    <button class="btn p" onclick="tourNext()" id="tourNextBtn">Дальше</button>
+  </div>
+</div>
+
+<div class="ov" id="ovSoc" onclick="if(event.target===this)closeSoc()">
+  <div class="md">
+    <div class="mdh">
+      <div><h3>Наши каналы</h3><p>Здесь публикуем новые офферы, конкурсы и разборы связок. Вопросы — в чат, он живой.</p></div>
+      <button class="mdx" onclick="closeSoc()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mdb">
+      <a class="soc" id="socChat" href="https://t.me/+sT-yflb3StFmMjFk" target="_blank" style="text-decoration:none;color:inherit;">
+        <div class="si" style="background:#2AABEE;"><i class="ti ti-brand-telegram"></i></div>
+        <div class="st2"><b>Чат креаторов</b><span>162 участника · вопросы, разборы, взаимопомощь</span></div>
+        <i class="ti ti-arrow-up-right ar"></i>
+      </a>
+      <a class="soc" href="https://t.me/edugramnews" target="_blank" style="text-decoration:none;color:inherit;">
+        <div class="si" style="background:#7E63D6;"><i class="ti ti-speakerphone"></i></div>
+        <div class="st2"><b>Канал @edugramnews</b><span>новые офферы, конкурсы, изменения ставок</span></div>
+        <i class="ti ti-arrow-up-right ar"></i>
+      </a>
+      <a class="soc" id="socMgr" href="https://t.me/natali_edugram" target="_blank" style="text-decoration:none;color:inherit;">
+        <div class="si" style="background:#16A34A;"><i class="ti ti-user-heart"></i></div>
+        <div class="st2"><b>Менеджер @natali_edugram</b><span>подключение офферов и вопросы по выплатам</span></div>
+        <i class="ti ti-arrow-up-right ar"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div id="t"></div>
+
+<script>
+const SV=(p,extra)=>'<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"'+(extra||'')+'>'+p+'</svg>';
+const SVG={
+ bell:SV('<path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/>'),
+ help:SV('<circle cx="12" cy="12" r="9"/><path d="M12 16v.01"/><path d="M12 13a2 2 0 0 0 .914-3.782a1.98 1.98 0 0 0-2.414 .483"/>'),
+};
+
+const NAV={
+ creator:[['p-c-dash','Дашборд','ti-chart-bar'],['p-c-home','Мой кабинет','ti-home'],['p-c-videos','Мои видео','ti-video'],['p-c-offers','Офферы','ti-layout-grid'],['p-c-top','Конкурсы','ti-trophy'],['p-c-school','Школа','ti-school'],['p-c-scout','Скаутинг','ti-users-group']],
+ client:[['p-k-brief','Бриф','ti-file-text']],
+ admin:[['p-a-creators','Креаторы','ti-users'],['p-a-mod','Проверка роликов','ti-eye'],['p-a-offers','Офферы','ti-layout-grid'],['p-a-contests','Конкурсы','ti-trophy'],['p-a-rates','Ставки','ti-adjustments'],['p-a-pay','Выплаты','ti-cash'],['p-a-brief','Заявки','ti-inbox'],['p-a-school','Школа','ti-school'],['p-a-scout','Скаутинг','ti-users-group']]
+};
+let view='land', asCreator=null;
+function home(){ asCreator=null; go('land'); }
+function go(v){
+  view=v;
+  ['land','creator','client','admin'].forEach(x=>document.getElementById('v-'+x).classList.toggle('on',x===v));
+  document.getElementById('testbar').style.display='block';
+  document.querySelectorAll('#tsw button').forEach(b=>b.classList.toggle('on',b.dataset.r===v));
+  const nb=document.getElementById('navbar'), bb=document.getElementById('backbar');
+  bb.style.display=(v==='creator'&&asCreator)?'block':'none';
+  if(v!=='creator') asCreator=null;
+  if(v==='land'){
+    nb.style.display='none';
+    document.querySelector('header').style.display='none';
+    document.getElementById('hr').innerHTML='';
+    return;
+  }
+  document.querySelector('header').style.display='block';
+  nb.style.display='block';
+  const roleName={creator:'Креатор',client:'Заказчик',admin:'Админ'}[v];
+  document.getElementById('hr').innerHTML='<span class="chip">'+roleName+'</span><span class="exit" onclick="home()"><i class="ti ti-logout" style="font-size:15px;"></i>Выйти</span>';
+  const socNav='<div class="navsoc">'+
+    (v==='creator'?'<button class="bell" onclick="toggleNotif(event)" title="Уведомления">'+SVG.bell+'<span class="bdot" id="bdot">3</span></button>':'')+
+    (v==='creator'?'<button class="tourbtn" onclick="tourStart()" title="Показать подсказки">'+SVG.help+'</button>':'')+
+    (v==='creator'?'<a href="https://t.me/+sT-yflb3StFmMjFk" target="_blank"><i class="ti ti-brand-telegram" style="color:#2AABEE;"></i>Чат креаторов</a>':'')+
+    '<a href="https://t.me/edugramnews" target="_blank"><i class="ti ti-speakerphone" style="color:var(--violet);"></i>@edugramnews</a>'+
+    (v==='creator'?'<a href="#" onclick="openSoc();return false;"><i class="ti ti-dots"></i></a>':'')+
+  '</div>';
+  document.getElementById('nav').innerHTML=NAV[v].map((x,i)=>
+    '<button data-p="'+x[0]+'" class="'+(i===0?'on':'')+'" onclick="pg(\''+x[0]+'\')"><i class="ti '+x[2]+'"></i>'+x[1]+'</button>').join('')+socNav;
+  pg(NAV[v][0][0]);
+  if(v==='creator' && !asCreator) tourMaybe(); else tourHide();
+}
+function openCreator(nick){
+  asCreator=nick;
+  const d=D.find(x=>x.n===nick);
+  document.getElementById('asWho').textContent=nick;
+  fillCreator(d);
+  go('creator');
+  document.getElementById('backbar').style.display='block';
+}
+function pg(id){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===id));
+  document.querySelectorAll('#v-'+view+' .pg').forEach(p=>p.classList.toggle('on',p.id===id));
+  if(id==='p-c-top') ctBack();
+  window.scrollTo(0,0);
+}
+
+/* ===== ОФФЕРЫ (грузятся с бекенда, см. server/store.js) ===== */
+let OFFERS=[];
+const STATE={on:['подключён','g','<button class="btn" onclick="t(\'Промо-материалы\')"><i class="ti ti-photo"></i>Промо-материалы</button>'],
+ free:['доступен','v','<button class="btn p" onclick="connectOffer(\'{{ENC}}\')"><i class="ti ti-plus"></i>Подключиться</button>'],
+ lvl3:['с уровня 3','a','<button class="btn" disabled style="opacity:.5;cursor:default;"><i class="ti ti-lock"></i>Недоступен</button>'],
+ soon:['скоро','m','<button class="btn" disabled style="opacity:.5;cursor:default;"><i class="ti ti-clock"></i>Скоро</button>']};
+function connectOffer(encName){
+ const name=decodeURIComponent(encName);
+ fetch('/api/offers/'+encName+'/connect',{method:'POST'})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{ if(!ok){ t(d.error||'Не удалось подключить оффер'); return; } OFFERS=d; drawOffers(); t('Оффер подключён'); })
+  .catch(()=>t('Не удалось подключить оффер'));
+}
+function drawOffers(){
+ const el=document.getElementById('offers'); if(!el) return;
+ el.innerHTML=OFFERS.map(o=>{
+ const s=STATE[o.state];
+ const btn=(o.state==='free')?s[2].replace('{{ENC}}',encodeURIComponent(o.n)):s[2];
+ return '<div class="ofc"><div class="ofl">'+
+ '<div class="oft"><h3>'+o.n+' ('+o.m+')</h3><span class="stars">★★★★★</span>'+
+ (o.best?'<span class="tag g">Лучший оффер</span>':'')+(o.promo?'<span class="tag r">Акция</span>':'')+
+ '<span class="tag '+s[1]+'">'+s[0]+'</span></div>'+
+ '<p class="ofd">'+o.d+'</p>'+
+ '<table class="oftab"><thead><tr><th>Цель</th><th>Тариф</th><th>Postclick</th></tr></thead><tbody>'+
+ o.goals.map(g=>'<tr><td>'+g[0]+'</td><td style="font-weight:500">'+g[1]+'</td><td style="color:var(--text-2)">'+g[2]+'</td></tr>').join('')+
+ '</tbody></table></div>'+
+ '<div class="ofr">'+
+ '<div class="ofm"><span>Гео</span><span class="geo">'+o.geo.join('')+'</span></div>'+
+ '<div class="ofm"><span>EPL</span><span>'+o.epl+'</span></div>'+
+ '<div class="ofm"><span>Подтв. %</span><span>'+o.conf+'</span></div>'+
+ '<div class="ofm"><span>Холд</span><span>'+o.hold+'</span></div>'+
+ '<div class="ofm" style="padding-top:9px;border-top:1px solid var(--border);"><span>За просмотр</span><span style="color:var(--violet)">'+o.rate+'</span></div>'+
+ '<div style="margin-top:auto;padding-top:10px;">'+btn+'</div>'+
+ '</div></div>';
+ }).join('');
+}
+
+/* ===== ВИДЕО (грузятся с бекенда) ===== */
+const PL={tt:['#111','ti-brand-tiktok','TikTok'],ig:['#E1306C','ti-brand-instagram','Instagram'],yt:['#FF0000','ti-brand-youtube','YouTube'],vk:['#0077FF','ti-brand-vk','VK']};
+let FMT=[];
+let COEF=[];
+let VID=[];
+const nf=v=>v>=1000?(v/1000).toFixed(1).replace('.0','')+'K':v;
+const ST={ok:['принят','g'],wait:['на проверке','a'],none:['не размечен','m'],small:['мало просмотров','m'],wd:['выведено','m']};
+function drawVid(){
+ const list=VID.filter(x=>inPeriod(x.d));
+ const tb=document.getElementById('vtb'); if(!tb) return;
+ if(!list.length){ tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:22px 0;">За этот период роликов нет</td></tr>'; return; }
+ tb.innerHTML=list.map(x=>{
+  const pl=PL[x.p], pay=(x.st==='ok')?Math.round(x.v*0.15*x.k):0;
+  const f=FMT.find(y=>y.k===x.k);
+  let cell;
+  if(x.st==='small') cell='<span class="zero">—</span>';
+  else if(!x.of) cell='<button class="btn" style="padding:5px 11px;font-size:12px;" onclick="openMark('+x.i+')"><i class="ti ti-tag"></i>Разметить</button>';
+  else cell='<span class="tag v">'+x.of+'</span> <span style="font-size:12px;color:var(--text-2)">'+f.n+'</span>';
+  return '<tr>'+
+  '<td data-l="Соцсеть"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i>'+pl[2]+'</span></td>'+
+  '<td class="hi" data-l="Оффер">'+cell+'</td>'+
+  '<td data-l="Дата" style="color:var(--text-2)">'+x.d+'</td><td data-l="Охваты" style="font-weight:500">'+nf(x.v)+'</td><td data-l="ER">'+x.er+'</td>'+
+  '<td data-l="Статус"><span class="tag '+ST[x.st][1]+'">'+ST[x.st][0]+'</span>'+(x.wd?' <span class="tag m">выведено</span>':'')+'</td>'+
+  '<td data-l="Доход" class="'+(pay?'money':'zero')+'">'+(pay?pay.toLocaleString('ru-RU')+' ₽':'0 ₽')+(pay?'<span class="kf">'+String(x.k).replace('.',',')+'</span>':'')+'</td>'+
+  '<td><a href="#" onclick="t(\'Откроется ролик\');return false;" style="color:var(--violet);font-size:12.5px;">Открыть</a></td></tr>';
+ }).join('');
+}
+let markId=null;
+function markRecalc(){
+ const x=VID.find(y=>y.i===markId); if(!x) return;
+ const of=document.getElementById('mkOf').value;
+ const rate=RATE[of]*LVM[MYLV];
+ document.querySelectorAll('#mkB .fp').forEach(el=>{
+  const k=+el.dataset.pay;
+  el.textContent=Math.round(x.v*rate*k).toLocaleString('ru-RU')+' ₽';
+ });
+ const rl=document.getElementById('mkRate');
+ if(rl) rl.innerHTML='Ставка по офферу «'+of+'» на твоём уровне — <b>'+rate.toFixed(3).replace(/0$/,'').replace('.',',')+' ₽</b> за просмотр';
+}
+function openMark(i){
+ markId=i;
+ const x=VID.find(y=>y.i===i);
+ const opts=FMT.map(f=>'<label class="fmt" onclick="pickFmt('+f.k+')" data-k="'+f.k+'">'+
+  '<div class="fk">'+String(f.k).replace('.',',')+'</div>'+
+  '<div class="fx"><b>'+f.n+'</b><span>'+f.d+'</span></div>'+
+  '<div class="fp" data-pay="'+f.k+'">0 ₽</div></label>').join('');
+ showMark('Разметить ролик', nf(x.v)+' просмотров · '+x.d,
+  '<div class="row" style="margin-bottom:10px;"><label>Оффер</label><select id="mkOf" style="flex:1;background:#fff;color:var(--text);" onchange="markRecalc()"><option>Study AI</option><option>Кэмп</option><option>Автор24</option></select></div>'+
+  '<div id="mkRate" style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;"></div>'+
+  '<div style="font-size:12.5px;color:var(--text-2);margin-bottom:9px;">Какой это формат — от него зависит коэффициент</div>'+
+  opts+
+  '<div class="note" style="margin:14px 0 0;"><i class="ti ti-clock"></i><div>После отправки ролик уходит на проверку, обычно до суток. Если формат указан не тот, коэффициент поправят и напишут почему.</div></div>');
+ markRecalc();
+}
+function pickFmt(k){
+ document.querySelectorAll('.fmt').forEach(e=>e.classList.toggle('on',+e.dataset.k===k));
+ window.__pickK=k;
+}
+function markSend(){
+ const k=window.__pickK;
+ if(!k){ t('Выбери формат ролика'); return; }
+ const offerKey=document.getElementById('mkOf').value;
+ fetch('/api/videos/'+markId+'/mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({offerKey,k})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось разметить ролик'); return; }
+   VID=d.videos; drawVid(); closeMark();
+   t(k===0.05?'Принято сразу — деньги начислены':'Отправлено на проверку');
+  })
+  .catch(()=>t('Не удалось разметить ролик'));
+}
+
+function calc(){
+ const v=+document.getElementById('cv').value||0;
+ const base=+document.getElementById('cr').value;
+ const k=+document.getElementById('ck').value;
+ const r=base*LVM[MYLV];
+ const pay=v>=5000?Math.round(v*r*k):0;
+ const rs=r.toFixed(3).replace(/0$/,'').replace('.',',');
+ document.getElementById('cf').innerHTML=v<5000
+  ? 'Меньше 5 000 просмотров — в оплату не идёт'
+  : v.toLocaleString('ru-RU')+' × <b>'+rs+' ₽</b> × '+String(k).replace('.',',')+' <span style="color:#166534;opacity:.7">(ставка '+MYLV+' уровня)</span>';
+ document.getElementById('co').textContent=pay.toLocaleString('ru-RU')+' ₽';
+}
+
+function bmch(){
+ const m=document.getElementById('bm').value;
+ const f=document.getElementById('bmf');
+ if(m==='rev') f.innerHTML='<div class="row"><label>Первая оплата</label><input placeholder="85 %" style="background:#fff;color:var(--text);"></div><div class="row"><label>Повторные</label><input placeholder="20 %" style="background:#fff;color:var(--text);"></div>';
+ else if(m==='fix') f.innerHTML='<div class="row"><label>Целевое действие</label><input placeholder="Новый заказ" style="background:#fff;color:var(--text);"></div><div class="row"><label>Ставка</label><input placeholder="2 000 ₽" style="background:#fff;color:var(--text);"></div>';
+ else f.innerHTML='<div class="row"><label>Ставка за просмотр</label><input placeholder="0,15 ₽" style="background:#fff;color:var(--text);"></div><div class="row"><label>Мин. просмотров</label><input placeholder="5 000" style="background:#fff;color:var(--text);"></div>';
+}
+
+let D=[];
+const m=v=>v?v.toLocaleString('ru-RU')+' ₽':'0 ₽';
+const cl=v=>v?'money':'zero';
+let LVN={1:'Новичок',2:'Активный',3:'Профи',4:'Топ'};
+let LVG={1:30,2:60,3:100,4:100};   // оплат за последние 30 дней
+let LVM={1:1,2:1.2,3:1.4,4:1.6};   // множитель ставки за просмотр
+const MYLV=1;
+
+function fillCreator(d){
+ document.getElementById('cName').textContent=d.n;
+ document.getElementById('cSub').textContent='ID '+d.id+' · 8 июля — 7 августа';
+ const tp=d.pays, goal=LVG[d.lv], left=Math.max(0,goal-tp);
+ document.getElementById('cLvl').textContent='Уровень '+d.lv+' · '+LVN[d.lv];
+ const rNow=(0.15*LVM[d.lv]).toFixed(3).replace(/0$/,'').replace('.',',');
+ const rNext=d.lv<4?(0.15*LVM[d.lv+1]).toFixed(3).replace(/0$/,'').replace('.',','):null;
+ document.getElementById('cLvlTxt').innerHTML=d.lv>=4
+  ? 'Максимальный уровень. Ставка за просмотр <b>'+rNow+' ₽</b> на Study AI — выше не бывает.'
+  : 'Ставка за просмотр на Study AI сейчас <b>'+rNow+' ₽</b>. Ещё '+left+' оплат до уровня '+(d.lv+1)+' — ставка вырастет до <b>'+rNext+' ₽</b>. Уровень считается по оплатам за последние 30 дней и пересматривается каждый месяц';
+ const g=document.getElementById('cGain');
+ if(d.lv>=4){
+  g.innerHTML='Ты на максимуме. Ролик на 100 000 просмотров с полным туториалом приносит <b>'+Math.round(100000*0.15*LVM[4]*0.7).toLocaleString('ru-RU')+' ₽</b> — на '+Math.round((LVM[4]-1)*100)+'% больше базовой ставки.';
+ } else {
+  const p1=Math.round(100000*0.15*LVM[d.lv]*0.7), p2=Math.round(100000*0.15*LVM[d.lv+1]*0.7);
+  const m1=Math.round(100000*0.15*LVM[d.lv]*1.5), m2=Math.round(100000*0.15*LVM[d.lv+1]*1.5);
+  g.innerHTML='<b>Что даст уровень '+(d.lv+1)+':</b> +20% к каждому оплаченному ролику. '+
+   'Полный туториал на 100 000 просмотров — <b>'+p2.toLocaleString('ru-RU')+' ₽</b> вместо '+p1.toLocaleString('ru-RU')+' ₽ (+'+(p2-p1).toLocaleString('ru-RU')+' ₽). '+
+   'Обзор с промокодом — <b>'+m2.toLocaleString('ru-RU')+' ₽</b> вместо '+m1.toLocaleString('ru-RU')+' ₽ (+'+(m2-m1).toLocaleString('ru-RU')+' ₽).';
+ }
+ document.getElementById('cBar').style.width=Math.min(100,Math.round(tp/goal*100))+'%';
+ document.getElementById('cPay').textContent=tp;
+ document.getElementById('cPayOf').textContent=d.lv>=4?'оплат за 30 дней':'из '+goal+' за 30 дней';
+ document.getElementById('cRef').value='https://studyai.ru/?ref='+d.id;
+ document.getElementById('cPromo').value=d.code;
+ const K=kPer();
+ const dv=sc(d.v),df=sc(d.f),dp=sc(d.p),ds=sc(d.sc);
+ const tot=dv+df+dp+ds;
+ document.getElementById('cInc').innerHTML=
+  card('green','ti-player-play','',m(dv),'','За просмотры')+
+  card('violet','ti-link','hi',m(df),Math.round(d.pays*K)+' новых оплат','По ссылке')+
+  card('violet','ti-ticket','hi',m(dp),'','По промокоду')+
+  card('pink','ti-users-group','hi',m(ds),'','Со скаутинга')+
+  card('green','ti-wallet','hi',m(tot),'','Итого');
+ document.getElementById('cStat').innerHTML=
+  card('blue','ti-eye','',d.r,'','Охваты')+
+  card('violet','ti-photo','',d.ct,'','Контент')+
+  card('pink','ti-thumb-up','',d.lk,'','Лайки')+
+  card('amber','ti-message-circle','',d.cm,'','Коммент')+
+  card('green','ti-trending-up','',d.e,'','ER');
+}
+function card(col,ic,hi,n,s,l){
+ return '<div class="c '+hi+'"><div class="ic" style="background:var(--'+col+'-bg);color:var(--'+col+');"><i class="ti '+ic+'"></i></div>'+
+ '<div class="n">'+n+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'<div class="l">'+l+'</div></div>';
+}
+
+const FLT=[
+ ['all','Все',()=>true],
+ ['noid','Без ID эдуграма',d=>!d.id],
+ ['nocode','Без промокода',d=>!d.code||d.code==='—'],
+ ['nosale','Есть охваты, нет продаж',d=>d.v>0&&d.f===0&&d.p===0],
+ ['sleep','Не публикуются',d=>d.ct<20],
+ ['top','Продают',d=>d.pays>0],
+];
+let crF='all';
+function drawFilters(){
+ const el=document.getElementById('crFilters'); if(!el) return;
+ el.innerHTML=FLT.map(f=>{
+  const n=D.filter(f[2]).length;
+  return '<button class="'+(crF===f[0]?'on':'')+'" onclick="crF=\''+f[0]+'\';r()">'+f[1]+' <span style="opacity:.6">'+n+'</span></button>';
+ }).join('');
+}
+function expCSV(){
+ const rows=[['Ник','ID эдуграм','Промокод','Уровень','Охваты','ER','За просмотры','Рефка','Промокод ₽','Итого']];
+ curList().forEach(d=>rows.push([d.n,d.id,d.code,d.lv,d.r,d.e,sc(d.v),sc(d.f),sc(d.p),sc(d.v+d.f+d.p)]));
+ const csv='﻿'+rows.map(r2=>r2.join(';')).join('\n');
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+ a.download='creators_'+dmy(PER.from)+'_'+dmy(PER.to)+'.csv';
+ a.click();
+ t('Выгружено '+curList().length+' строк');
+}
+function curList(){
+ const q=(document.getElementById('q')?document.getElementById('q').value:'').toLowerCase();
+ const f=FLT.find(x=>x[0]===crF)[2];
+ return D.filter(d=>d.n.toLowerCase().includes(q)&&f(d));
+}
+function r(){
+ drawFilters();
+ document.getElementById('tb').innerHTML=curList().map(d=>
+  '<tr class="clk" onclick="openCreator(\''+d.n+'\')"><td style="color:var(--violet);font-weight:500">'+d.n+'</td><td style="color:var(--text-muted)">'+d.id+'</td><td><span class="tag m">'+d.lv+'</span></td>'+
+  '<td data-l="Ник">'+d.r+'</td><td>'+d.e+'</td><td class="'+cl(d.v)+'">'+m(d.v)+'</td>'+
+  '<td data-l="ID" class="hi '+cl(d.f)+'">'+m(d.f)+'</td><td class="hi '+cl(d.p)+'">'+m(d.p)+'</td>'+
+  '<td data-l="Ур." class="hi" style="font-weight:600">'+m(d.v+d.f+d.p)+'</td></tr>').join('');
+}
+
+/* ===== ОЧЕРЕДЬ ПРОВЕРКИ (грузится с бекенда) ===== */
+let MOD=[];
+let RATE={};
+function drawMod(){
+ const tb=document.getElementById('modtb');
+ if(!tb) return;
+ tb.innerHTML=MOD.map(m=>{
+  const pl=PL[m.p], f=FMT.find(y=>y.k===m.k);
+  const pay=Math.round(m.v*RATE[m.of]*m.k);
+  const btns=FMT.map(x=>'<button class="kbtn'+(x.k===m.k?' on':'')+'" title="'+x.n+'" onclick="setK('+m.i+','+x.k+')">'+String(x.k).replace('.',',')+'</button>').join('');
+  return '<tr><td>'+m.c+' <span class="tag m">'+m.lv+'</span></td>'+
+  '<td data-l="Охваты"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i></span></td>'+
+  '<td data-l="ER" style="font-weight:500">'+nf(m.v)+'</td>'+
+  '<td data-l="За просмотры"><span class="tag v">'+m.of+'</span></td>'+
+  '<td data-l="Рефка" style="font-size:12.5px;color:var(--text-2)">'+f.n+'</td>'+
+  '<td data-l="Промокод" class="money">'+pay.toLocaleString('ru-RU')+' ₽</td>'+
+  '<td data-l="Итого"><div class="krow">'+btns+'<button class="btn" style="padding:5px 11px;font-size:12px;margin-left:6px;" onclick="modOk('+m.i+')"><i class="ti ti-check"></i>Принять</button></div></td></tr>';
+ }).join('');
+}
+function setK(i,k){
+ const m=MOD.find(x=>x.i===i);
+ if(m.k===k) return;
+ if(k<m.k){ askReason('mod',i,k); return; }
+ fetch('/api/moderation/'+i+'/set-k',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({k})})
+  .then(r=>r.json()).then(d=>{ if(d.moderation){ MOD=d.moderation; drawMod(); } })
+  .catch(()=>t('Не удалось сохранить коэффициент'));
+}
+function modOk(i){
+ const m=MOD.find(x=>x.i===i); if(!m) return;
+ fetch('/api/moderation/'+i+'/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось принять ролик'); return; }
+   t('Принято: '+m.c+' · коэффициент '+String(m.k).replace('.',','));
+   MOD=d.moderation; DONE=d.done;
+   if(d.notification){ NOTIF=[d.notification,...NOTIF]; drawNotif(); }
+   drawMod(); drawDone();
+  })
+  .catch(()=>t('Не удалось принять ролик'));
+}
+
+/* ===== УЖЕ ПРИНЯТЫЕ (грузится с бекенда) ===== */
+let DONE=[];
+function drawDone(){
+ const tb=document.getElementById('donetb'); if(!tb) return;
+ const q=(document.getElementById('dq').value||'').toLowerCase();
+ tb.innerHTML=DONE.filter(d=>d.c.toLowerCase().includes(q)).map(d=>{
+  const pl=PL[d.p], pay=Math.round(d.v*RATE[d.of]*d.k);
+  const btns=FMT.map(x=>'<button class="kbtn'+(x.k===d.k?' on':'')+'" title="'+x.n+'" onclick="redoK('+d.i+','+x.k+')">'+String(x.k).replace('.',',')+'</button>').join('');
+  return '<tr><td>'+d.c+'</td>'+
+  '<td data-l="Креатор"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i></span></td>'+
+  '<td data-l="Соцсеть">'+nf(d.v)+'</td><td><span class="tag v">'+d.of+'</span></td>'+
+  '<td data-l="Просмотры" style="font-size:12.5px;color:var(--text-2)">'+(d.by==='авто'?'<span class="tag m">авто</span>':d.by)+' · '+d.dt+'</td>'+
+  '<td data-l="Оффер" class="money">'+pay.toLocaleString('ru-RU')+' ₽</td>'+
+  '<td data-l="Принял"><div class="krow">'+btns+'</div></td>'+
+  '<td data-l="Начислено"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--red);" onclick="dropVid('+d.i+')"><i class="ti ti-x"></i>Снять</button></td></tr>';
+ }).join('');
+}
+function redoK(i,k){
+ const d=DONE.find(x=>x.i===i);
+ if(d.k===k){ t('Уже стоит этот коэффициент'); return; }
+ if(k<d.k){ askReason('done',i,k); return; }
+ redoApply(i,k,'');
+}
+function redoApply(i,k,why){
+ const d=DONE.find(x=>x.i===i); if(!d) return;
+ fetch('/api/moderation/done/'+i+'/redo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({k,why})})
+  .then(r=>r.json().then(res=>({ok:r.ok,res})))
+  .then(({ok,res})=>{
+   if(!ok){ t(res.error||'Не удалось пересчитать коэффициент'); return; }
+   DONE=res.done; drawDone();
+   const diff=res.diff;
+   t(d.c+': '+(diff>0?'доначислено ':'списано ')+Math.abs(diff).toLocaleString('ru-RU')+' ₽');
+   if(res.notification){ NOTIF=[res.notification,...NOTIF]; drawNotif(); }
+  })
+  .catch(()=>t('Не удалось пересчитать коэффициент'));
+}
+function dropVid(i){
+ const d=DONE.find(x=>x.i===i); if(!d) return;
+ fetch('/api/moderation/done/'+i,{method:'DELETE'})
+  .then(r=>r.json().then(res=>({ok:r.ok,res})))
+  .then(({ok,res})=>{
+   if(!ok){ t(res.error||'Не удалось снять ролик'); return; }
+   DONE=res.done; drawDone();
+   t(res.creator+': ролик снят с оплаты, списано '+res.was.toLocaleString('ru-RU')+' ₽');
+  })
+  .catch(()=>t('Не удалось снять ролик'));
+}
+
+/* ===== ДАШБОРД СООБЩЕСТВА (грузится с бекенда) ===== */
+let TOPVID=[];
+const PLC={tt:['#111','ti-brand-tiktok','TikTok'],ig:['#E1306C','ti-brand-instagram','Instagram'],yt:['#FF0000','ti-brand-youtube','YouTube'],vk:['#0077FF','ti-brand-vk','VK']};
+const fmt=v=>v>=1000000?(v/1000000).toFixed(2).replace(/\.?0+$/,'')+'M':v>=1000?(v/1000).toFixed(1).replace('.0','')+'K':v;
+function drawDash(){
+ const rows=[...TOPVID].sort((a,b)=>b.v-a.v);
+ document.getElementById('topVid').innerHTML=rows.map((x,i)=>{
+  const pl=PLC[x.p], me=x.c==='@marsedzhan';
+  return '<tr'+(me?' style="background:#FCFAFF"':'')+'>'+
+  '<td data-l="#" style="color:'+(i<3?'#F5B301;font-weight:600':'var(--text-muted)')+'">'+(i+1)+'</td>'+
+  '<td data-l="Креатор"'+(me?' style="font-weight:600"':'')+'>'+x.c+(me?' <span class="tag v">ты</span>':'')+'</td>'+
+  '<td data-l="Соцсеть"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i>'+pl[2]+'</span></td>'+
+  '<td data-l="Оффер">'+(x.of==='—'?'<span class="zero">не размечен</span>':'<span class="tag v">'+x.of+'</span>')+'</td>'+
+  '<td data-l="Просмотры" style="font-weight:500">'+fmt(x.v)+'</td><td>'+x.lk+'</td><td>'+x.er+'</td>'+
+  '<td data-l="Лайки"><a href="#" onclick="t(\'Откроется ролик\');return false;" style="color:var(--violet);font-size:12.5px;">Смотреть</a></td></tr>';
+ }).join('');
+
+ const cr=[...D].sort((a,b)=>(b.pays||0)-(a.pays||0));
+ document.getElementById('topCre').innerHTML=cr.map((d,i)=>{
+  const me=d.n==='@marsedzhan';
+  return '<tr'+(me?' style="background:#FCFAFF"':'')+'>'+
+  '<td data-l="#" style="color:'+(i<3?'#F5B301;font-weight:600':'var(--text-muted)')+'">'+(i+1)+'</td>'+
+  '<td data-l="Креатор" style="font-weight:'+(me?600:400)+'">'+d.n+(me?' <span class="tag v">ты</span>':'')+'</td>'+
+  '<td data-l="Ур."><span class="tag m">'+d.lv+'</span></td>'+
+  '<td data-l="Охваты">'+d.r+'</td><td>'+d.e+'</td><td>'+d.ct+'</td>'+
+  '<td data-l="ER" style="font-weight:600">'+(d.pays||'—')+'</td></tr>';
+ }).join('');
+}
+
+/* ===== КОНКУРСЫ (грузятся с бекенда) ===== */
+let CONTESTS=[];
+let CONTESTS_ADMIN_SUMMARY={live:0,planned:0,participants:0,fund:'—'};
+let ctFilter='Все';
+function drawContests(){
+ const offs=['Все',...new Set(CONTESTS.map(c=>c.of))];
+ document.getElementById('ctFilters').innerHTML=offs.map(o=>
+  '<button class="'+(o===ctFilter?'on':'')+'" onclick="ctFilter=\''+o+'\';drawContests()">'+o+'</button>').join('');
+ const list=CONTESTS.filter(c=>ctFilter==='Все'||c.of===ctFilter);
+ document.getElementById('ctCards').innerHTML=list.map(c=>
+  '<div class="ct '+(c.st==='soon'?'off':'')+'" '+(c.st==='live'?'onclick="ctOpen(\''+c.id+'\')"':'')+'>'+
+  '<div class="cth"><div><h3>'+c.n+'</h3><div class="of">'+c.of+'</div></div>'+
+  (c.st==='live'?'<span class="tag g">идёт · '+c.left+'</span>':'<span class="tag a">'+c.left+'</span>')+'</div>'+
+  '<p class="ctd">'+c.d+'</p>'+
+  '<div class="ctm">'+
+   '<div><span>Призовой фонд</span><b>'+c.fund+'</b></div>'+
+   '<div><span>Участников</span><b>'+(c.people||'—')+'</b></div>'+
+   '<div><span>Период</span><b style="font-weight:500">'+c.period+'</b></div>'+
+  '</div>'+
+  (c.my?'<div class="mypos"><i class="ti ti-trophy"></i>Ты на '+c.my.pos+' месте · '+c.my.val+' · '+c.my.next+'</div>':'')+
+  '</div>').join('');
+}
+function drawAdminContests(){
+ const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+ set('acLive',CONTESTS_ADMIN_SUMMARY.live);
+ set('acPlanned',CONTESTS_ADMIN_SUMMARY.planned);
+ set('acPeople',CONTESTS_ADMIN_SUMMARY.participants);
+ set('acFund',CONTESTS_ADMIN_SUMMARY.fund);
+ const tb=document.getElementById('adminContestsTb'); if(!tb) return;
+ const stCls={'идёт':'g','запланирован':'a','черновик':'m'};
+ tb.innerHTML=CONTESTS.map(c=>
+  '<tr><td>'+c.n+'</td><td>'+c.of+'</td><td>'+c.unit+'</td><td>'+c.period+'</td>'+
+  '<td>'+(c.people||'<span class="zero">—</span>')+'</td><td class="money">'+c.fund+'</td>'+
+  '<td><span class="tag '+(stCls[c.adminStatus]||'m')+'">'+c.adminStatus+'</span></td></tr>').join('');
+}
+function ctOpen(id){
+ const c=CONTESTS.find(x=>x.id===id);
+ document.getElementById('ctList').style.display='none';
+ document.getElementById('ctDetail').style.display='block';
+ document.getElementById('ctdName').textContent=c.n;
+ document.getElementById('ctdSub').textContent=c.of+' · '+c.period+' · осталось '+c.left;
+ document.getElementById('ctdCards').innerHTML=
+  card('violet','ti-trophy','hi',c.fund,'','Призовой фонд')+
+  card('blue','ti-users','',c.people,'','Участников')+
+  card('green','ti-medal','hi',c.my?c.my.pos+' место':'—',c.my?c.my.val:'','Твоя позиция');
+ document.getElementById('ctdRules').querySelector('div').textContent=c.d;
+ document.getElementById('ctdBoard').innerHTML=c.board.map((b,i)=>
+  '<div class="lb'+(b[0]==='@marsedzhan'?' me':'')+'"><div class="pos'+(i<3?' t':'')+'">'+(i+1)+'</div>'+
+  '<div class="nm">'+b[0]+(b[0]==='@marsedzhan'?' <span class="tag v" style="margin-left:6px;">это ты</span>':'')+'</div>'+
+  '<div class="val">'+b[1]+'</div></div>').join('');
+ document.getElementById('ctdPrizes').innerHTML=c.prizes.map(p=>
+  '<div class="prz"><span>'+p[0]+'</span><b>'+p[1]+'</b></div>').join('');
+ window.scrollTo(0,0);
+}
+function ctBack(){
+ document.getElementById('ctDetail').style.display='none';
+ document.getElementById('ctList').style.display='block';
+ window.scrollTo(0,0);
+}
+
+/* ===== ТЕМА НЕДЕЛИ (грузится с бекенда) ===== */
+let WEEK_THEME={title:'—',description:'',offerKey:'Study AI',multiplier:1.2};
+
+/* ===== СТАВКИ (грузятся с бекенда) ===== */
+let RATES=[];
+let MIN_VIEWS=5000;
+let saveRatesTimer=null;
+function scheduleSaveRates(){ clearTimeout(saveRatesTimer); saveRatesTimer=setTimeout(saveRatesNow,600); }
+function saveRatesNow(){
+ const minViews=+document.getElementById('minv').value||MIN_VIEWS;
+ fetch('/api/rates',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+  rates:RATES, levels:LVM, minViews, formats:COEF.map(c=>({k:c.k})),
+ })})
+  .then(r=>r.json()).then(d=>{
+   if(d.rates) RATES=d.rates;
+   if(d.levels) LVM=d.levels;
+   if(Number.isFinite(d.minViews)) MIN_VIEWS=d.minViews;
+   t('Настройки сохранены');
+  })
+  .catch(()=>t('Не удалось сохранить настройки'));
+}
+function drawRates(){
+ document.getElementById('ratesList').innerHTML=RATES.map((x,i)=>
+  '<div class="row"><label>'+x.n+'</label><div class="stepper"><input type="number" step="0.01" value="'+x.v+'" oninput="RATES['+i+'].v=+this.value;prev();scheduleSaveRates();"> <span style="font-size:12.5px;color:var(--text-2);">₽ за просмотр на 2 уровне</span></div></div>').join('');
+ document.getElementById('lvlList').innerHTML=[1,2,3,4].map(l=>
+  '<div class="row"><label style="width:150px;">Уровень '+l+' · '+LVN[l]+'</label>'+
+  '<div class="stepper"><input type="number" step="0.1" value="'+LVM[l]+'" oninput="LVM['+l+']=+this.value;prev();scheduleSaveRates();"> <span style="font-size:12.5px;color:var(--text-2);">× от базовой</span></div>'+
+  '<span style="margin-left:14px;font-size:13px;color:var(--text-2);">Study AI → <b style="color:var(--violet)">'+(RATES[0].v*LVM[l]).toFixed(3).replace(/0$/,'').replace('.',',')+' ₽</b> за просмотр · '+(l===1?'меньше 30 оплат':'от '+LVG[l-1]+' оплат за 30 дней')+'</span></div>').join('');
+ document.getElementById('coefList').innerHTML=COEF.map((x,i)=>
+  '<div class="row"><label style="width:60px;"><span class="tag v">'+String(x.k).replace('.',',')+'</span></label>'+
+  '<span style="flex:1;font-size:13px;color:var(--text-2);">'+x.d+'</span>'+
+  '<div class="stepper"><input type="number" step="0.05" value="'+x.k+'" oninput="COEF['+i+'].k=+this.value;prev();scheduleSaveRates();"></div></div>').join('');
+ const minv=document.getElementById('minv'); if(minv) minv.value=MIN_VIEWS;
+ prev();
+}
+function prev(){
+ const mv=+document.getElementById('minv').value||0;
+ const rt=RATES[0];
+ const rows=[1,2,3,4].map(l=>'<div><b>Уровень '+l+'</b> · '+(rt.v*LVM[l]).toFixed(3).replace(/0$/,'').replace('.',',')+' ₽ → '+
+  COEF.map(c=>String(c.k).replace('.',',')+': '+Math.round(100000*rt.v*LVM[l]*c.k).toLocaleString('ru-RU')+' ₽').join(' · ')+'</div>').join('');
+ document.getElementById('prevTxt').innerHTML='<b>'+rt.n+', 100 000 просмотров:</b><div style="margin-top:6px;line-height:1.9;">'+rows+'</div><div style="margin-top:8px;">Ролики меньше '+mv.toLocaleString('ru-RU')+' просмотров в оплату не идут.</div>';
+ drawRatesLive();
+}
+function drawRatesLive(){
+ const el=document.getElementById('lvlList'); if(!el) return;
+ el.querySelectorAll('.row').forEach((row,i)=>{
+  const b=row.querySelector('b'); if(b) b.textContent=(RATES[0].v*LVM[i+1]).toFixed(3).replace(/0$/,'').replace('.',',')+' ₽';
+ });
+}
+function drawWeekTheme(){
+ const t1=document.getElementById('wkTitle'), t2=document.getElementById('wkDesc');
+ if(t1) t1.textContent=WEEK_THEME.title;
+ if(t2) t2.textContent=WEEK_THEME.description+' Коэффициент повышен до '+String(WEEK_THEME.multiplier).replace('.',',')+'.';
+ const at=document.getElementById('wtAdminTitle'), ad=document.getElementById('wtAdminDesc'),
+       ao=document.getElementById('wtAdminOffer'), am=document.getElementById('wtAdminMult');
+ if(at) at.value=WEEK_THEME.title;
+ if(ad) ad.value=WEEK_THEME.description;
+ if(ao) ao.value=WEEK_THEME.offerKey;
+ if(am) am.value=WEEK_THEME.multiplier;
+}
+function saveWeekTheme(){
+ const body={
+  title:(document.getElementById('wtAdminTitle').value||'').trim(),
+  description:(document.getElementById('wtAdminDesc').value||'').trim(),
+  offerKey:document.getElementById('wtAdminOffer').value,
+  multiplier:+document.getElementById('wtAdminMult').value,
+ };
+ fetch('/api/week-theme',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось сохранить тему недели'); return; }
+   WEEK_THEME=d; drawWeekTheme();
+   t('Тема недели сохранена — уже видна всем креаторам');
+  })
+  .catch(()=>t('Не удалось сохранить тему недели'));
+}
+/* ===== ТУР ДЛЯ НОВИЧКА ===== */
+const TOUR=[
+ {sel:null,t:'Освоимся за минуту',d:'Покажу, где что лежит и как тут зарабатывают. Тридцать секунд — и дальше сам. Открыть подсказки заново можно кнопкой со знаком вопроса в меню.'},
+ {sel:'[data-p="p-c-dash"]',t:'Дашборд',d:'Топ роликов и креаторов за месяц. Заходи сюда за идеями: видно, какой формат и площадка сейчас залетают.'},
+ {sel:'[data-p="p-c-home"]',go:'p-c-home',t:'Мой кабинет',d:'Твои деньги и статистика блога. Всё в одном месте.'},
+ {sel:'.lvl',go:'p-c-home',t:'Уровень',d:'Растёт с каждой оплатой. Чем выше уровень — тем больше офферов открыто и выше коэффициент за ролики.'},
+ {sel:'#cInc',go:'p-c-home',t:'Откуда приходят деньги',d:'Четыре источника: за просмотры роликов, по твоей ссылке, по промокоду и с приведённых креаторов. Складываются в общий итог.'},
+ {sel:'[data-p="p-c-videos"]',go:'p-c-videos',t:'Мои видео',d:'Ролики подтягиваются из соцсетей сами. Главное — разметить, под какой оффер снят ролик, иначе он не попадёт в оплату.'},
+ {sel:'#calcBox',go:'p-c-videos',t:'Калькулятор',d:'Посчитай заранее, сколько принесёт ролик: просмотры × ставка оффера × коэффициент за формат. От 5 000 просмотров.'},
+ {sel:'#markNote',go:'p-c-videos',t:'Разметка — главное действие',d:'Ролики подтягиваются из соцсетей сами, но платим мы не за всё подряд. Пока не указано, под какой оффер снят ролик, он не уходит на проверку и приносит ноль. Разметить можно в течение 14 дней после публикации.'},
+ {sel:null,go:'p-c-videos',t:'Как это выглядит',d:'Три действия — и ролик, который ты уже выложил, начинает приносить деньги.',
+  art:'<div class="tstep"><span class="tn">1</span> Ролик подтянулся сам</div>'+
+      '<div class="tline"><span class="tp"><i class="ti ti-brand-tiktok"></i>TikTok</span><span class="tv">112 000 просмотров</span>'+
+      '<span class="tst">не размечен</span><span class="tm">0 ₽</span><span class="tbtn">Разметить</span></div>'+
+      '<div class="tstep"><span class="tn">2</span> Выбираешь оффер и формат</div>'+
+      '<div class="tsel"><span class="tchip on">Study AI</span><span class="tchip">Кэмп</span><span class="tchip">Автор24</span></div>'+
+      '<div class="tsel"><span class="tchip">упоминание ×0,05</span><span class="tchip on">полный туториал ×0,7</span><span class="tchip">обзор с промокодом ×1,5</span></div>'+
+      '<div class="tstep"><span class="tn">3</span> Сутки на проверку — и деньги на балансе</div>'+
+      '<div class="tline"><span class="tp"><i class="ti ti-brand-tiktok"></i>TikTok</span><span class="tv">112 000 просмотров</span>'+
+      '<span class="tst ok">принят</span><span class="tm win">11 760 ₽</span></div>'+
+      '<div class="tform">112 000 × 0,15 ₽ × 0,7 = 11 760 ₽</div>'},
+ {sel:'#vidHint',go:'p-c-videos',t:'Почему формат решает всё',d:'Формат — это насколько подробно ты показал продукт. Упоминание вскользь даёт 0,05 от ставки, полный обзор с промокодом — 1,5. Один и тот же ролик на 100 000 просмотров принесёт 750 ₽ или 22 500 ₽. Разница только в подаче.'},
+ {sel:'#balRow',go:'p-c-home',t:'Где деньги и как забрать',d:'Всё принятое копится на балансе. От 1 000 ₽ можно забирать: напиши менеджеру, он переведёт сумму в Edugram — дальше выводишь в любой день сам или на карту, заявки принимаем по вторникам до 14:00.'},
+ {sel:'[data-p="p-c-offers"]',go:'p-c-offers',t:'Офферы',d:'Что можно продвигать. Подключаешь — сразу получаешь ссылку и промокод. Часть офферов открывается с уровнем.'},
+ {sel:'[data-p="p-c-top"]',go:'p-c-top',t:'Конкурсы',d:'Идут каждый месяц по разным офферам. Участвовать может любой, призовые от 2 000 ₽.'},
+ {sel:'[data-p="p-c-school"]',go:'p-c-school',t:'Школа',d:'Девять бесплатных курсов. Прошёл — открываются закрытые офферы и повышенный коэффициент.'},
+ {sel:'[data-p="p-c-scout"]',go:'p-c-scout',t:'Скаутинг',d:'Приводишь креатора — получаешь 5% с его продаж каждый месяц, пока он работает.'},
+ {sel:'.navsoc a',go:'p-c-dash',t:'Чат креаторов',d:'Живой чат на 162 человека. Вопросы, разборы и помощь — сюда. Удачи!'},
+];
+let ti=0, tourOn=false, pendingTour=false;
+function tourStart(){
+ tourOn=true; ti=0;                       // ставим флаг ДО go(), иначе go() запустит тур повторно
+ if(view!=='creator') go('creator');
+ tourShow();
+}
+function tourShow(){
+ const s=TOUR[ti];
+ if(s.go) pg(s.go);
+ const ring=document.getElementById('tourRing'), tip=document.getElementById('tourTip');
+ document.getElementById('tourT').textContent=s.t;
+ document.getElementById('tourD').textContent=s.d;
+ document.getElementById('tourC').textContent=(ti+1)+' / '+TOUR.length;
+ document.getElementById('tourNextBtn').textContent=ti===TOUR.length-1?'Понятно':'Дальше';
+ tip.style.display='block';
+ const el=s.sel?document.querySelector(s.sel):null;
+ const dim=document.getElementById('tourDim');
+ const art=document.getElementById('tourArt');
+ art.innerHTML = s.art || '';
+ art.style.display = s.art ? 'block' : 'none';
+ tip.classList.toggle('wide', !!s.art);
+ if(s.sel && !el){ tourNext(); return; }   // элемента нет — не показываем пустой шаг
+ if(!el){                                   // вступительный экран: затемняем всё и показываем крупную карточку
+  ring.style.display='none';
+  dim.style.display='block';
+  tip.classList.add('intro');
+  tip.style.left='50%'; tip.style.top='50%'; tip.style.transform='translate(-50%,-50%)';
+  return;
+ }
+ dim.style.display='none';
+ tip.classList.remove('intro');
+ tip.style.transform='none';
+ el.scrollIntoView({block:'center',behavior:'instant'});
+ setTimeout(()=>{
+  const r=el.getBoundingClientRect(), pad=6;
+  ring.style.display='block';
+  ring.style.left=(r.left-pad)+'px'; ring.style.top=(r.top-pad)+'px';
+  ring.style.width=(r.width+pad*2)+'px'; ring.style.height=(r.height+pad*2)+'px';
+  const tw=310, th=tip.offsetHeight;
+  let l=r.left, tp=r.bottom+14;
+  if(tp+th>window.innerHeight-10) tp=Math.max(10,r.top-th-14);
+  if(l+tw>window.innerWidth-14) l=window.innerWidth-tw-14;
+  tip.style.left=Math.max(14,l)+'px'; tip.style.top=tp+'px';
+ },60);
+}
+function tourNext(){ ti++; if(ti>=TOUR.length) tourEnd(); else tourShow(); }
+/* просто спрятать — без отметки «пройден» */
+function tourHide(){
+ tourOn=false; ti=0;
+ const r=document.getElementById('tourRing'), p=document.getElementById('tourTip'), d=document.getElementById('tourDim');
+ if(r) r.style.display='none';
+ if(d) d.style.display='none';
+ if(p){ p.style.display='none'; p.classList.remove('intro'); }
+}
+/* закончил или пропустил — больше не показываем сам */
+function tourEnd(){
+ tourHide();
+ try{ localStorage.setItem('ca_tour_done','1'); }catch(e){}
+}
+function tourMaybe(){
+ if(tourOn || pendingTour) return;
+ if(document.querySelector('.ov.on')) return;   // ждём, пока закроют попап
+ let done=false;
+ try{ done=localStorage.getItem('ca_tour_done')==='1'; }catch(e){}
+ if(!done) setTimeout(()=>{ if(!document.querySelector('.ov.on')) tourStart(); },500);
+}
+function resetTour(){
+ try{ localStorage.removeItem('ca_tour_done'); }catch(e){}
+ tourHide();
+ t('Флаг сброшен — открой кабинет креатора');
+}
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape' && tourOn) tourEnd();
+});
+window.addEventListener('resize',()=>{ if(tourOn) tourShow(); });
+
+function showMark(title,sub,body){
+ document.getElementById('mkT').textContent=title;
+ document.getElementById('mkS').textContent=sub;
+ document.getElementById('mkB').innerHTML=body;
+ window.__pickK=null;
+ document.getElementById('ovMark').classList.add('on');
+}
+function closeMark(){ document.getElementById('ovMark').classList.remove('on'); }
+let BAL=15053;
+let PAYQ=[];
+const PAYST={'новая':'m','в работе':'a','выплачено':'g','отклонена':'r'};
+function drawPay(){
+ const tb=document.getElementById('payTb'); if(!tb) return;
+ const wait = PAYQ.filter(x=>x.st==='новая'||x.st==='в работе');
+ const paid = PAYQ.filter(x=>x.st==='выплачено');
+ document.getElementById('payCards').innerHTML =
+  '<div class="c hi"><div class="ic" style="background:var(--amber-bg);color:var(--amber);"><i class="ti ti-clock"></i></div>'+
+   '<div class="n">'+wait.reduce((a,b)=>a+b.s,0).toLocaleString('ru-RU')+' ₽</div><div class="s">'+wait.length+' заявок</div><div class="l">Ждёт выплаты</div></div>'+
+  '<div class="c"><div class="ic" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-cash"></i></div>'+
+   '<div class="n">'+paid.reduce((a,b)=>a+b.s,0).toLocaleString('ru-RU')+' ₽</div><div class="s">'+paid.length+' выплат</div><div class="l">Выплачено за месяц</div></div>'+
+  '<div class="c"><div class="ic" style="background:var(--violet-bg);color:var(--violet);"><i class="ti ti-credit-card"></i></div>'+
+   '<div class="n">'+PAYQ.filter(x=>x.w==='на карту'&&(x.st==='новая'||x.st==='в работе')).length+'</div><div class="l">На карту, к вторнику</div></div>'+
+  '<div class="c"><div class="ic" style="background:var(--blue-bg);color:var(--blue);"><i class="ti ti-video"></i></div>'+
+   '<div class="n">'+wait.reduce((a,b)=>a+b.v,0)+'</div><div class="l">Роликов в очереди</div></div>';
+
+ tb.innerHTML = PAYQ.map(x=>{
+  let act='<span class="zero">—</span>';
+  if(x.st==='новая')   act='<button class="btn" onclick="payAct('+x.id+',\'в работе\')"><i class="ti ti-player-play"></i>В работу</button>'+
+                          '<button class="btn" style="margin-left:6px;" onclick="payAct('+x.id+',\'отклонена\')"><i class="ti ti-x"></i></button>';
+  if(x.st==='в работе')act='<button class="btn p" onclick="payAct('+x.id+',\'выплачено\')"><i class="ti ti-check"></i>Выплачено</button>'+
+                          '<button class="btn" style="margin-left:6px;" onclick="payAct('+x.id+',\'отклонена\')"><i class="ti ti-x"></i></button>';
+  return '<tr><td data-l="Креатор"><b>'+x.c+'</b></td><td data-l="ID" style="color:var(--text-muted)">'+x.eid+'</td>'+
+   '<td data-l="Сумма" class="money">'+x.s.toLocaleString('ru-RU')+' ₽</td>'+
+   '<td data-l="Способ">'+x.w+'</td><td data-l="Роликов">'+(x.v||'<span class="zero">—</span>')+'</td>'+
+   '<td data-l="Заявка">'+x.d+'</td>'+
+   '<td data-l="Статус"><span class="tag '+PAYST[x.st]+'">'+x.st+'</span></td>'+
+   '<td style="white-space:nowrap;">'+act+'</td></tr>';
+ }).join('');
+}
+function payAct(id,st){
+ const x=PAYQ.find(y=>y.id===id); if(!x) return;
+ fetch('/api/payouts/'+id+'/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:st})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось обновить заявку'); return; }
+   PAYQ=d.payouts; WD=d.withdrawals; BAL=d.balance; VID=d.videos;
+   if(d.notification){ NOTIF=[d.notification,...NOTIF]; drawNotif(); }
+   if(st==='выплачено') t('Отмечено выплаченным — '+x.s.toLocaleString('ru-RU')+' ₽');
+   else if(st==='отклонена') t('Заявка отклонена, сумма вернулась креатору');
+   else t('Взято в работу');
+   drawPay(); drawWD(); drawVid();
+  })
+  .catch(()=>t('Не удалось обновить заявку'));
+}
+const MYNICK='@marsedzhan', MYEID=629398;
+let WD=[];
+function drawWD(){
+ const tb=document.getElementById('wdtb'); if(!tb) return;
+ const stc={'выплачено':'g','в обработке':'a','заявка создана':'m','отклонена':'r'};
+ tb.innerHTML=WD.length?WD.map(x=>
+  '<tr><td data-l="Дата">'+x.d+'</td><td data-l="Сумма" class="money">'+x.s.toLocaleString('ru-RU')+' ₽</td>'+
+  '<td data-l="Способ">'+x.w+'</td><td data-l="Роликов">'+x.v+'</td>'+
+  '<td data-l="Статус"><span class="tag '+stc[x.st]+'">'+x.st+'</span></td></tr>').join('')
+  :'<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px 0;">Выводов пока не было</td></tr>';
+ const b=document.getElementById('cBal'); if(b) b.textContent=BAL.toLocaleString('ru-RU')+' ₽';
+}
+function openPay(){
+ document.getElementById('payBal').textContent=BAL.toLocaleString('ru-RU')+' ₽';
+ document.getElementById('ovPay').classList.add('on');
+}
+function closePay(){ document.getElementById('ovPay').classList.remove('on'); }
+let PM='card';
+function pickPay(v){
+ PM=v;
+ document.getElementById('pmCard').classList.toggle('on',v==='card');
+ document.getElementById('pmEdu').classList.toggle('on',v==='edu');
+}
+function doWithdraw(){
+ if(BAL<1000){ t('Минимальная сумма вывода — 1 000 ₽'); return; }
+ fetch('/api/withdrawals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:PM})})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось создать заявку'); return; }
+   WD=d.withdrawals; PAYQ=d.payouts; VID=d.videos; BAL=d.balance;
+   if(d.notification){ NOTIF=[d.notification,...NOTIF]; drawNotif(); }
+   drawPay(); drawWD(); drawVid(); closePay();
+   t('Заявка создана — открываем чат с менеджером');
+   window.open('https://t.me/natali_edugram','_blank');
+  })
+  .catch(()=>t('Не удалось создать заявку'));
+}
+
+/* ===== УВЕДОМЛЕНИЯ ===== */
+const NI={ok:['ti-check','var(--green-bg)','var(--green)'],down:['ti-arrow-down','var(--amber-bg)','var(--amber)'],
+ money:['ti-coin','var(--green-bg)','var(--green)'],lvl:['ti-award','var(--violet-bg)','var(--violet)'],
+ cup:['ti-trophy','var(--amber-bg)','var(--amber)'],scout:['ti-users-group','var(--pink-bg)','var(--pink)']};
+let NOTIF=[];
+function drawNotif(){
+ const l=document.getElementById('nlist'); if(!l) return;
+ l.innerHTML=NOTIF.map(x=>{
+  const c=NI[x.t];
+  return '<div class="ni'+(x.n?' new':'')+'"><div class="nic" style="background:'+c[1]+';color:'+c[2]+'"><i class="ti '+c[0]+'"></i></div>'+
+  '<div class="nt"><b>'+x.ti+'</b><span>'+x.tx+'</span><i class="tm">'+x.tm+'</i></div></div>';
+ }).join('');
+ const cnt=NOTIF.filter(x=>x.n).length;
+ const b=document.getElementById('bdot');
+ if(b) b.style.display=cnt?'flex':'none', b.textContent=cnt;
+}
+function toggleNotif(e){
+ e.stopPropagation();
+ const p=document.getElementById('npanel');
+ if(p.style.display==='block'){p.style.display='none';return;}
+ p.style.display='block';
+ const r=e.currentTarget.getBoundingClientRect();
+ let l=r.right-340; if(l<12) l=12;
+ p.style.left=l+'px'; p.style.top=(r.bottom+8)+'px';
+}
+function readAll(){
+ fetch('/api/notifications/read-all',{method:'POST'})
+  .then(r=>r.json()).then(d=>{ NOTIF=d; drawNotif(); t('Все прочитаны'); })
+  .catch(()=>t('Не удалось обновить уведомления'));
+}
+function pushNotif(type,title,text){
+ NOTIF.unshift({t:type,ti:title,tx:text,tm:'только что',n:1});
+ drawNotif();
+}
+document.addEventListener('click',()=>{const p=document.getElementById('npanel'); if(p) p.style.display='none';});
+
+/* ===== АВТОРИЗАЦИЯ И ОНБОРДИНГ ===== */
+const STEPS=[
+ {b:'Подключить соцсети',s:'Instagram, TikTok, YouTube или VK — в разделе «Мой кабинет». Ролики начнут подтягиваться сами, вручную добавлять не нужно.'},
+ {b:'Выбрать оффер',s:'Открой вкладку «Офферы» и подключи Study AI — сразу получишь свою ссылку и промокод.'},
+ {b:'Снять первый ролик',s:'Посмотри на дашборде, что залетает у других. Можно взять тему недели — по ней повышенный коэффициент.'},
+ {b:'Разметить ролик',s:'Во вкладке «Мои видео» отметь, под какой оффер снят ролик. Без этого он не попадёт в оплату.'},
+];
+function openAuth(){ document.getElementById('ovAuth').classList.add('on'); }
+function closeAuth(){ document.getElementById('ovAuth').classList.remove('on'); }
+function doAuth(isNew){
+ closeAuth();
+ go('creator');
+ if(isNew){
+  document.getElementById('wT').textContent='С регистрацией!';
+  document.getElementById('wS').textContent='Четыре шага до первых денег';
+  document.getElementById('wB').innerHTML=STEPS.map((x,i)=>
+   '<div class="ck'+(i===0?' now':'')+'"><div class="cb">'+(i+1)+'</div>'+
+   '<div class="cc"><b>'+x.b+(i===0?' <span class="tag v" style="margin-left:5px;">начни отсюда</span>':'')+'</b><span>'+x.s+'</span></div></div>').join('')+
+   '<div class="note" style="margin:14px 0 0;"><i class="ti ti-brand-telegram" style="color:#2AABEE"></i><div>Всё происходит здесь: ролики, офферы, деньги и конкурсы. А бот продублирует важное в телеграм, чтобы не пропустить начисление или конец конкурса.</div></div>';
+  pendingTour=true;
+  setTimeout(()=>document.getElementById('ovWelcome').classList.add('on'),250);
+ } else { t('Вход выполнен'); }
+}
+function closeWelcome(withTour){
+ document.getElementById('ovWelcome').classList.remove('on');
+ if(withTour===true){ pendingTour=false; setTimeout(tourStart,320); }
+ else { pendingTour=false; }
+}
+function openSent(){ document.getElementById('ovSent').classList.add('on'); }
+function closeSent(){ document.getElementById('ovSent').classList.remove('on'); go('land'); }
+
+/* ===== БРИФ ЗАКАЗЧИКА (отправка на бекенд + список у админа) ===== */
+let BRIEFS=[];
+function val(id){ const e=document.getElementById(id); return e?e.value:''; }
+function submitBrief(){
+ const body={
+  company:val('brCompany'), site:val('brSite'), niche:val('brNiche'),
+  message:val('brMessage'), payModel:val('bm'),
+  budget:val('brBudget'), geo:val('brGeo'),
+  contactName:val('brName'), contactTg:val('brTg'),
+ };
+ fetch('/api/briefs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось отправить бриф'); return; }
+   BRIEFS=d.briefs; drawBriefs(); openSent();
+  })
+  .catch(()=>t('Не удалось отправить бриф'));
+}
+function drawBriefs(){
+ const tb=document.getElementById('briefsTb'); if(!tb) return;
+ const stCls={'подключён':'g','на модерации':'a','новая':'m'};
+ tb.innerHTML=BRIEFS.map(b=>
+  '<tr><td>'+b.company+'</td><td>'+b.niche+'</td><td>'+b.model+'</td><td>'+(b.budget==='—'?'<span class="zero">—</span>':b.budget)+'</td>'+
+  '<td>'+b.date+'</td><td><span class="tag '+(stCls[b.status]||'m')+'">'+b.status+'</span></td></tr>').join('');
+}
+
+/* ===== АДМИНСКАЯ ТАБЛИЦА ОФФЕРОВ ===== */
+let ADMIN_OFFERS=[];
+function drawAdminOffersTable(){
+ const tb=document.getElementById('adminOffersTb'); if(!tb) return;
+ tb.innerHTML=ADMIN_OFFERS.map(o=>
+  '<tr><td>'+o.offer+'</td><td>'+o.model+'</td><td>'+o.rate+'</td><td>'+o.perView+'</td>'+
+  '<td>'+o.connected+'</td><td>'+(o.paid==null?'<span class="zero">—</span>':'<span class="money">'+o.paid+'</span>')+'</td>'+
+  '<td><span class="tag '+(o.access==='всем'?'g':o.access==='скоро'?'m':'v')+'">'+o.access+'</span></td></tr>').join('');
+}
+
+/* ===== ШКОЛА ===== */
+let SCHOOL_MINE={completed:0,total:9,lessons:[]};
+let SCHOOL_ADMIN={started:0,completed:0,multiplier:'—',courses:[]};
+function drawSchoolMine(){
+ const p=document.getElementById('schMineProgress'); if(p) p.textContent=SCHOOL_MINE.completed+' из '+SCHOOL_MINE.total+' курсов';
+ const el=document.getElementById('schoolMineList'); if(!el) return;
+ const icons={done:'<div class="ic2" style="background:var(--green-bg);color:var(--green);"><i class="ti ti-check"></i></div>',
+  progress:'<div class="ic2"><i class="ti ti-player-play"></i></div>', locked:'<div class="ic2"><i class="ti ti-lock"></i></div>'};
+ el.innerHTML=SCHOOL_MINE.lessons.map(l=>{
+  const btn=(l.status==='done')?'':'<button class="btn" onclick="t(\'Открываем курс\')">'+(l.status==='progress'?'Продолжить':'Начать')+'</button>';
+  return '<div class="lesson">'+icons[l.status]+'<div class="t"><b>'+l.title+'</b><span>'+l.modules+' модулей'+(l.progressLabel?' · '+l.progressLabel:'')+'</span></div>'+btn+'</div>';
+ }).join('');
+}
+function drawSchoolAdmin(){
+ const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+ set('schStarted',SCHOOL_ADMIN.started); set('schCompleted',SCHOOL_ADMIN.completed); set('schMult',SCHOOL_ADMIN.multiplier);
+ const tb=document.getElementById('schoolAdminTb'); if(!tb) return;
+ tb.innerHTML=SCHOOL_ADMIN.courses.map(c=>
+  '<tr><td>'+c.name+'</td><td>'+c.started+'</td><td>'+c.completed+'</td><td class="'+(c.paid?'money':'zero')+'">'+c.paid+'</td></tr>').join('');
+}
+
+/* ===== СКАУТИНГ ===== */
+let SCOUT_MINE={invited:0,activated:0,payments:0,earnedMonth:0,refLink:'',rows:[]};
+let SCOUT_ADMIN={invited:0,activated:0,activationRate:'—',rows:[]};
+function drawScoutMine(){
+ const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+ set('scMineInvited',SCOUT_MINE.invited); set('scMineActive',SCOUT_MINE.activated);
+ set('scMinePayments',SCOUT_MINE.payments); set('scMineEarned',SCOUT_MINE.earnedMonth.toLocaleString('ru-RU')+' ₽');
+ const link=document.getElementById('scoutLink'); if(link) link.value=SCOUT_MINE.refLink;
+ const tb=document.getElementById('scoutMineTb'); if(!tb) return;
+ const stCls={'приносит оплаты':'g','снимает первый ролик':'a'};
+ tb.innerHTML=SCOUT_MINE.rows.map(r2=>
+  '<tr><td>'+r2.nick+'</td><td style="color:var(--text-muted)">'+r2.eid+'</td><td>'+r2.date+'</td>'+
+  '<td><span class="tag '+(stCls[r2.stage]||'m')+'">'+r2.stage+'</span></td><td>'+r2.payments+'</td>'+
+  '<td>'+(r2.sum||'<span class="zero">—</span>')+'</td><td class="'+(r2.earned?'money':'zero')+'">'+(r2.earned||'0 ₽')+'</td></tr>').join('');
+}
+function drawScoutAdmin(){
+ const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+ set('scAdmInvited',SCOUT_ADMIN.invited); set('scAdmActivated',SCOUT_ADMIN.activated); set('scAdmRate',SCOUT_ADMIN.activationRate);
+ const tb=document.getElementById('scoutAdminTb'); if(!tb) return;
+ tb.innerHTML=SCOUT_ADMIN.rows.map(r2=>
+  '<tr><td>'+r2.nick+'</td><td style="color:var(--text-muted)">'+r2.eid+'</td><td>'+r2.invited+'</td><td>'+r2.activated+'</td>'+
+  '<td>'+r2.payments+'</td><td>'+r2.sum+'</td><td class="money">'+r2.paidOut+'</td>'+
+  '<td><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="t(\'Список приведённых\')">Смотреть</button></td></tr>').join('');
+}
+
+/* ===== ПРИЧИНА ИЗМЕНЕНИЯ ===== */
+const REASONS=['Сервис только назван, показа нет','Показан кратко, это мини-туториал','Нет промокода в ролике','Не тот оффер','Формат выше заявленного'];
+let rsCtx=null;
+function askReason(where,i,k){
+ const arr=where==='mod'?MOD:DONE;
+ const it=arr.find(x=>x.i===i);
+ rsCtx={where,i,k,was:it.k};
+ document.getElementById('rsSub').textContent=it.c+' · '+String(it.k).replace('.',',')+' → '+String(k).replace('.',',');
+ document.getElementById('rsQuick').innerHTML=REASONS.map(r=>'<button class="kbtn" style="min-width:0" onclick="document.getElementById(\'rsTxt\').value=\''+r+'\'">'+r+'</button>').join('');
+ document.getElementById('rsTxt').value='';
+ document.getElementById('ovReason').classList.add('on');
+}
+function closeReason(){ document.getElementById('ovReason').classList.remove('on'); rsCtx=null; }
+function applyReason(){
+ if(!rsCtx) return;
+ const why=(document.getElementById('rsTxt').value||'').trim()||'без комментария';
+ if(rsCtx.where==='mod'){
+  fetch('/api/moderation/'+rsCtx.i+'/set-k',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({k:rsCtx.k,why})})
+   .then(r=>r.json()).then(d=>{ if(d.moderation){ MOD=d.moderation; drawMod(); } })
+   .catch(()=>t('Не удалось сохранить коэффициент'));
+ } else { redoApply(rsCtx.i,rsCtx.k,why); }
+ closeReason();
+}
+
+/* ===== ПЕРИОД ===== */
+const TODAY=new Date(2026,7,7);
+const PER={days:30,from:null,to:null,custom:false};
+function dmy(d){return d.toISOString().slice(0,10);}
+function ru(d){return d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});}
+function setPeriod(days){
+ PER.days=days; PER.custom=false;
+ PER.to=new Date(TODAY);
+ PER.from=new Date(TODAY); PER.from.setDate(PER.from.getDate()-days+1);
+ renderAll();
+}
+function setCustom(){
+ const f=document.querySelector('.perslot .df'), t2=document.querySelector('.perslot .dt');
+ if(!f||!t2||!f.value||!t2.value) return;
+ PER.from=new Date(f.value); PER.to=new Date(t2.value); PER.custom=true;
+ PER.days=Math.max(1,Math.round((PER.to-PER.from)/86400000)+1);
+ renderAll();
+}
+function periodBar(){
+ const opts=[[7,'7 дней'],[30,'30 дней'],[90,'3 месяца']];
+ return '<div class="pg2">'+opts.map(o=>'<button class="'+(!PER.custom&&PER.days===o[0]?'on':'')+'" onclick="setPeriod('+o[0]+')">'+o[1]+'</button>').join('')+'</div>'+
+ '<div class="dts"><i class="ti ti-calendar" style="font-size:14px;color:var(--text-muted)"></i>'+
+ '<input type="date" class="df" value="'+dmy(PER.from)+'" onchange="setCustom()">'+
+ '<span>—</span><input type="date" class="dt" value="'+dmy(PER.to)+'" onchange="setCustom()"></div>'+
+ '<span class="cnt">'+ru(PER.from)+' — '+ru(PER.to)+' · '+PER.days+' дн.</span>';
+}
+function inPeriod(dstr){
+ const [d,m,y]=dstr.split('.').map(Number);
+ const dt=new Date(y,m-1,d);
+ return dt>=PER.from && dt<=PER.to;
+}
+const kPer=()=>PER.days/30;   // коэффициент масштабирования агрегатов
+const sc=v=>Math.round(v*kPer());
+
+function renderAll(){
+ document.querySelectorAll('.perslot').forEach(e=>e.innerHTML=periodBar());
+ drawVid(); drawMod(); drawDone(); drawDash(); drawWD(); r();
+ const d=D.find(x=>x.n===(asCreator||'@marsedzhan')); if(d) fillCreator(d);
+ updAgg();
+}
+function updAgg(){
+ const k=kPer();
+ const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+ // сводные карточки админа и дашборда
+ document.querySelectorAll('[data-agg]').forEach(e=>{
+  const base=+e.dataset.agg, unit=e.dataset.unit||'';
+  const val=Math.round(base*k);
+  e.textContent = unit==='m' ? (val>=1000000?(val/1000000).toFixed(1).replace('.0','')+'M':val>=1000?(val/1000).toFixed(1).replace('.0','')+'K':val)
+   : unit==='r' ? (val>=1000?(val/1000).toFixed(1).replace('.0','')+'K ₽':val+' ₽') : val.toLocaleString('ru-RU');
+ });
+}
+
+/* ===== ПОДСКАЗКИ ===== */
+const QT={
+ apay:'Все заявки креаторов на вывод. Сумма списывается с баланса креатора в момент заявки, поэтому дважды одни и те же деньги вывести нельзя. Переводы на карты уходят одним реестром по вторникам до 14:00.',
+ apayq:'«Новая» — креатор только отправил. «В работе» — вы взяли, деньги готовятся. «Выплачено» — закрыто, креатору падает уведомление. «Отклонена» — сумма возвращается креатору на баланс, а ролики снова становятся доступны к выводу.',
+ topvid:'Лучшие ролики всех креаторов за месяц. Смотри, какой формат и какая площадка сейчас залетают — это самый быстрый способ понять, что снимать.',
+ topcre:'Кто сколько оплат привёл за месяц. Оплата — это когда человек по твоей ссылке или промокоду оформил подписку.',
+ level:'Уровень зависит от того, сколько оплат ты привёл за последние 30 дней. Каждый уровень добавляет 20% к ставке за просмотр.<br><br>Ставка на Study AI: <b>1 ур. — 0,15 ₽ · 2 ур. — 0,18 ₽ · 3 ур. — 0,21 ₽ · 4 ур. — 0,24 ₽</b><br><br>Пороги: 30, 60 и 100 оплат за 30 дней. Пересматривается раз в месяц и может снизиться, если оплаты упадут.',
+ income:'Четыре источника: за просмотры размеченных роликов, процент с подписок по твоей ссылке, фикс за применение промокода и процент с креаторов, которых ты привёл.',
+ tools:'Ссылка и промокод — то, чем ты приводишь людей. Ссылку кидай в шапку профиля и сторис, промокод называй в видео, где ссылку не поставить.',
+ calc:'Прикинь заранее, сколько принесёт ролик. Формула: просмотры × ставка оффера на твоём уровне × коэффициент за формат.',
+ vids:'Ролики подтягиваются из соцсетей сами. Чтобы получить деньги — отметь, под какой оффер снят ролик. Неразмеченные не оплачиваются.',
+ offers:'Продукты, которые можно продвигать. Подключаешь оффер — получаешь под него ссылку и промокод. Часть офферов открывается с уровнем.',
+ week:'Тема, которая сейчас лучше всего конвертит. По ней повышенный коэффициент — выгоднее, чем снимать что попало.',
+ contests:'Соревнования по офферам, каждый месяц. Участвовать может любой, рейтинг обновляется ежедневно.',
+ school:'Бесплатные курсы про то, как зарабатывать на нейросетях. После прохождения открываются закрытые офферы.',
+ scout:'Приводишь другого креатора — получаешь 5% от его дохода с продаж, пока он работает. Просмотры в эту схему не входят.',
+ // админ
+ acre:'Все креаторы базы. Фиолетовые колонки — доход с продаж, которого сейчас нет в аналитике. Нажми на ник, чтобы открыть его кабинет.',
+ amod:'Сюда попадают только те ролики, которые креатор сам разметил под оффер и которые набрали от 5 000 просмотров. Остальные не проверяются.',
+ adone:'Уже обработанные ролики. Если ошиблись с коэффициентом — можно поправить, деньги пересчитаются. Автопринятые тоже здесь.',
+ aauto:'Коэффициент 0,05 принимается без проверки: это минимальная ставка, завышать нечего. Всё остальное смотрится руками.',
+ arate:'Базовая ставка — это первый уровень. Дальше каждый уровень добавляет 20% от базовой.',
+ alvl:'Чем больше оплат креатор приносит за 30 дней, тем выше его ставка за просмотры. Так деньги за охваты уходят тем, кто реально продаёт.',
+ acoef:'Множитель за формат ролика. Простое упоминание стоит дёшево, полный обзор с промокодом — в тридцать раз дороже.',
+ amin:'Ролики меньше этого порога не оплачиваются и не попадают в очередь на проверку.',
+ aschool:'Видно, влияет ли прохождение курсов на результат. Если разница исчезнет — механику надо менять.',
+ ascout:'Кто кого привёл. Связка берётся из поля «Источник прихода» в эдуграме, отдельный учёт вести не нужно.',
+ abrief:'Заявки, которые оставили заказчики через лендинг.',
+ wd:'Здесь видно, что и когда выводилось. Ролики, попавшие в вывод, помечаются как «выведено» — так не запутаешься, за что уже получил деньги. Выводить можно из личного кабинета Edugram в любой день или на карту по вторникам, от 1 000 ₽.',
+};
+function qq(e,key){
+ e.stopPropagation();
+ const p=document.getElementById('qpop');
+ p.innerHTML=QT[key]||'—';
+ p.style.display='block';
+ const r=e.currentTarget.getBoundingClientRect();
+ const w=p.offsetWidth,hh=p.offsetHeight;
+ let l=r.left-w/2+r.width/2, tp=r.bottom+9;
+ if(l<10) l=10;
+ if(l+w>window.innerWidth-10) l=window.innerWidth-w-10;
+ if(tp+hh>window.innerHeight-10) tp=Math.max(10,r.top-hh-9);
+ p.style.left=l+'px'; p.style.top=tp+'px';
+}
+document.addEventListener('click',()=>{const p=document.getElementById('qpop'); if(p) p.style.display='none';});
+
+function openSoc(){
+ const isC = view==='creator';
+ document.getElementById('socChat').style.display = isC?'flex':'none';
+ document.getElementById('socMgr').style.display = isC?'flex':'none';
+ document.getElementById('ovSoc').classList.add('on');
+}
+function closeSoc(){ document.getElementById('ovSoc').classList.remove('on'); }
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSoc();});
+
+function t(msg){
+ const e=document.createElement('div');e.className='toast';e.textContent=msg;
+ document.getElementById('t').appendChild(e);
+ requestAnimationFrame(()=>e.classList.add('s'));
+ setTimeout(()=>{e.classList.remove('s');setTimeout(()=>e.remove(),300)},2200);
+}
+/* ===== АНИМАЦИИ ЛЕНДИНГА ===== */
+const RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function markReveal(){
+  const lp = document.querySelector('.lp'); if(!lp) return;
+  // группы: селектор → класс анимации → шаг задержки внутри группы
+  const groups = [
+    ['.nums .in>div','rvz',70],
+    ['.stitle','rv',0], ['.ssub','rv',90],
+    ['.cases>.case','rvz',90],
+    ['.ideas>.idea','rvz',80],
+    ['.lives>.live','rvz',90], ['.lnote','rv',0],
+    ['.steps2>*','rv',80],
+    ['.split>*','rvz',90],
+    ['.final','rvz',0],
+    ['.lfoot','rv',0]
+  ];
+  groups.forEach(([sel,cls,step])=>{
+    lp.querySelectorAll(sel).forEach((el,i)=>{
+      if(el.classList.contains('rv')||el.classList.contains('rvz')) return;
+      el.classList.add(cls);
+      if(step) el.style.transitionDelay = (i*step)+'ms';
+    });
+  });
+  // герой — ступенчатый вход
+  ['.hbadges','.hero h1','.hero .sub2','.hero .hcta','.hnote'].forEach((sel,i)=>{
+    const el = lp.querySelector(sel); if(el) el.style.transitionDelay = (i*90)+'ms';
+  });
+}
+
+function countUp(el){
+  if(el.dataset.counted) return; el.dataset.counted = '1';
+  const node = [...el.childNodes].find(n=>n.nodeType===3 && /\d/.test(n.nodeValue));
+  if(!node) return;
+  const raw = node.nodeValue.trim();
+  const target = parseInt(raw.replace(/[^\d]/g,''),10);
+  if(!target || target>100000000) return;
+  const spaced = /\s/.test(raw);
+  const dur = 1100, t0 = performance.now();
+  const fmt = v => spaced ? v.toLocaleString('ru-RU').replace(/ /g,' ') : String(v);
+  (function step(now){
+    const p = Math.min(1,(now-t0)/dur);
+    const e = 1-Math.pow(1-p,3);
+    node.nodeValue = fmt(Math.round(target*e));
+    if(p<1) requestAnimationFrame(step); else node.nodeValue = raw;
+  })(t0);
+}
+
+function initReveal(){
+  markReveal();
+  const els = document.querySelectorAll('.lp .rv,.lp .rvz,.lp .rvl,.hero h1 .hl');
+  if(RM || !('IntersectionObserver' in window)){
+    els.forEach(e=>e.classList.add('vis'));
+    document.querySelectorAll('.lp .nums b,.lp .case .big2').forEach(e=>e.dataset.counted='1');
+    return;
+  }
+  const io = new IntersectionObserver(es=>{
+    es.forEach(en=>{
+      if(!en.isIntersecting) return;
+      en.target.classList.add('vis');
+      const hl = en.target.querySelector && en.target.querySelector('.hl');
+      if(hl) hl.classList.add('vis');
+      en.target.querySelectorAll && en.target.querySelectorAll('b,.big2').forEach(b=>{
+        if(b.closest('.nums,.case')) setTimeout(()=>countUp(b),160);
+      });
+      io.unobserve(en.target);
+    });
+  },{threshold:.16,rootMargin:'0px 0px -8% 0px'});
+  els.forEach(e=>io.observe(e));
+}
+
+/* ленты роликов */
+const REELS = [
+  {c:'r1', tag:'11 760 ₽', lm:0, t:'112 000 просмотров', d:'полный туториал · Study AI'},
+  {c:'r2', tag:'466 ₽',    lm:1, t:'с первой подписки',  d:'плюс 110 ₽ с повторных'},
+  {c:'r3', tag:'28 800 ₽', lm:0, t:'128 000 просмотров', d:'обзор с промокодом · ×1,5'},
+  {c:'r4', tag:'5% с их дохода', lm:0, t:'со скаутинга',  d:'пока приведённый креатор зарабатывает'},
+  {c:'r5', tag:'2 880 ₽',  lm:0, t:'64 000 просмотров',  d:'мини-туториал · ×0,3'},
+  {c:'r6', tag:'18 000 ₽', lm:0, t:'90 000 просмотров',  d:'Кэмп · с разбором · 0,20 ₽'},
+  {c:'r7', tag:'100 ₽',    lm:1, t:'за применение',      d:'промокод в описании'},
+  {c:'r8', tag:'10 500 ₽', lm:0, t:'150 000 просмотров', d:'Автор24 · полный туториал'}
+];
+
+function reelHTML(r){
+  return '<div class="reel '+r.c+'">'
+       + '<span class="rplay"></span><span class="rtag'+(r.lm?' lm':'')+'">'+r.tag+'</span>'
+       + '<div class="rbot"><b>'+r.t+'</b><span>'+r.d+'</span></div></div>';
+}
+
+function buildRails(){
+  const t1 = document.getElementById('track1');
+  if(!t1) return;
+  // дублируем набор — трек уезжает ровно на половину и склейки не видно
+  t1.innerHTML = (REELS.map(reelHTML).join('')).repeat(2);
+}
+
+function initRails(){
+  const rails = document.querySelectorAll('.lp .railwrap');
+  if(!rails.length) return;
+  if(RM || !('IntersectionObserver' in window)){
+    rails.forEach(r=>r.classList.add('vis'));
+  } else {
+    const io = new IntersectionObserver(es=>{
+      es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('vis'); io.unobserve(en.target); } });
+    },{threshold:.3});
+    rails.forEach(r=>io.observe(r));
+  }
+  rails.forEach(setupRail);
+}
+
+/* лента: сама едет + можно листать рукой */
+function setupRail(wrap){
+  const rail = wrap.querySelector('.rail'), track = wrap.querySelector('.rtrack');
+  if(!rail || !track) return;
+  const SPEED = 42;                 // пикселей в секунду
+  let last = performance.now(), paused = false, hover = false, dragging = false, timer = 0;
+
+  const half = () => track.scrollWidth / 2;
+  function loop(){                  // бесконечность: набор продублирован, отматываем на половину
+    const h = half(); if(h < 2) return;
+    if(rail.scrollLeft >= h) rail.scrollLeft -= h;
+    else if(rail.scrollLeft < 0) rail.scrollLeft += h;
+  }
+  function hold(ms){                // пауза после ручного вмешательства
+    paused = true; clearTimeout(timer);
+    if(ms) timer = setTimeout(()=>{ paused = false; }, ms);
+  }
+  function release(){ if(!hover && !dragging){ clearTimeout(timer); paused = false; } }
+
+  function tick(now){
+    const dt = Math.min(60, now - last); last = now;
+    if(!paused && !RM && document.visibilityState === 'visible' && wrap.classList.contains('vis')){
+      rail.scrollLeft += SPEED * dt / 1000;
+      loop();
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  rail.addEventListener('mouseenter', ()=>{ hover = true;  hold(0); });
+  rail.addEventListener('mouseleave', ()=>{ hover = false; release(); });
+  rail.addEventListener('wheel',      ()=>{ hold(2000); }, {passive:true});
+  rail.addEventListener('touchstart', ()=>{ hold(0); },    {passive:true});
+  rail.addEventListener('touchend',   ()=>{ hold(2500); });
+  rail.addEventListener('scroll',     loop,               {passive:true});
+
+  let sx = 0, sl = 0;
+  rail.addEventListener('pointerdown', e=>{
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    dragging = true; sx = e.clientX; sl = rail.scrollLeft; hold(0);
+    rail.classList.add('drag');
+    try{ rail.setPointerCapture(e.pointerId); }catch(_){}
+  });
+  rail.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    e.preventDefault();
+    rail.scrollLeft = sl - (e.clientX - sx); loop();
+  });
+  function stop(e){
+    if(!dragging) return;
+    dragging = false; rail.classList.remove('drag');
+    try{ rail.releasePointerCapture(e.pointerId); }catch(_){}
+    hold(2500);
+  }
+  rail.addEventListener('pointerup', stop);
+  rail.addEventListener('pointercancel', stop);
+  rail.addEventListener('dragstart', e=>e.preventDefault());
+}
+
+/* ===== ЗАГРУЗКА ДАННЫХ С БЕКЕНДА =====
+   Лендинг (всё, что выше по файлу — рекламная часть) ничего из этого не
+   ждёт: go('land') вызывается сразу, синхронно, как и раньше. Данные
+   приложения (кабинет креатора/заказчика/админа) подгружаются следом одним
+   запросом и подставляются в уже существующие функции отрисовки. */
+async function boot(){
+ try{
+  const r=await fetch('/api/bootstrap');
+  if(!r.ok) throw new Error('bootstrap failed: '+r.status);
+  const d=await r.json();
+  OFFERS=d.offers; VID=d.videos; D=d.creators;
+  LVN=d.levelNames; LVG=d.levelGoals; LVM=d.levels;
+  MOD=d.moderation; RATE=d.rate; DONE=d.done;
+  TOPVID=d.topVideos; CONTESTS=d.contests; CONTESTS_ADMIN_SUMMARY=d.contestsAdminSummary;
+  RATES=d.rates; MIN_VIEWS=d.minViews; WEEK_THEME=d.weekTheme;
+  PAYQ=d.payouts; WD=d.withdrawals; BAL=d.balance; NOTIF=d.notifications;
+  SCHOOL_MINE=d.schoolMine; SCHOOL_ADMIN=d.schoolAdmin;
+  SCOUT_MINE=d.scoutMine; SCOUT_ADMIN=d.scoutAdmin;
+  BRIEFS=d.briefs; ADMIN_OFFERS=d.adminOffers;
+  FMT=d.formats; COEF=d.formats.map(f=>({k:f.k,d:f.d}));
+
+  drawOffers();
+  fillCreator(D.find(x=>x.n==='@marsedzhan'));
+  drawRates(); drawWeekTheme(); drawContests(); drawAdminContests();
+  drawNotif(); drawWD(); drawPay(); calc();
+  drawAdminOffersTable(); drawBriefs();
+  drawSchoolMine(); drawSchoolAdmin(); drawScoutMine(); drawScoutAdmin();
+  setPeriod(30);
+ } catch(e){
+  console.error('Не удалось загрузить данные с сервера', e);
+  t('Не удалось загрузить данные с сервера — попробуйте обновить страницу');
+ }
+}
+go('land');
+boot();
+(function(){var a=document.querySelector('header .egl'),b=document.getElementById('lLogo');
+  if(a&&b) b.src=a.src;})();
+(function(){
+  var h=document.querySelector('.lhead'); if(!h) return;
+  var t=0;
+  window.addEventListener('scroll',function(){
+    if(t) return;
+    t=requestAnimationFrame(function(){t=0;h.classList.toggle('stuck',window.scrollY>10);});
+  },{passive:true});
+})();
+buildRails(); initReveal(); initRails();
+</script>
+</body>
+</html>
