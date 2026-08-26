@@ -228,14 +228,14 @@ let WEEK_THEME = {
 // =============================================================================
 let PAYQ = [
   { id: 101, c: '@sochi_nat', eid: 629410, s: 31321, w: 'на карту', v: 0, d: 'сегодня, 11:20', st: 'новая' },
-  { id: 102, c: '@basuha220', eid: 628745, s: 12480, w: 'из ЛК Edugram', v: 9, d: 'вчера, 18:04', st: 'в работе' },
+  { id: 102, c: '@basuha220', eid: 628745, s: 12480, w: 'из ЛК SREDA', v: 9, d: 'вчера, 18:04', st: 'в работе' },
   { id: 103, c: '@angelo4ek2003', eid: 629233, s: 7300, w: 'на карту', v: 5, d: '8 августа', st: 'выплачено' },
   { id: 104, c: '@lovi_neuro', eid: 629512, s: 2150, w: 'на карту', v: 3, d: '5 августа', st: 'выплачено' },
   { id: 105, c: '@frilans_aa', eid: 629688, s: 1040, w: 'на карту', v: 2, d: '4 августа', st: 'отклонена' },
 ];
 let WD = [
   { d: '22 июля', s: 8400, w: 'на карту', v: 3, st: 'выплачено', q: null },
-  { d: '8 июля', s: 5620, w: 'из ЛК Edugram', v: 2, st: 'выплачено', q: null },
+  { d: '8 июля', s: 5620, w: 'из ЛК SREDA', v: 2, st: 'выплачено', q: null },
 ];
 let BAL = 15053;
 
@@ -283,7 +283,7 @@ const SCHOOL_ADMIN = {
 // =============================================================================
 const SCOUT_MINE = {
   invited: 3, activated: 2, payments: 29, earnedMonth: 796,
-  refLink: 'https://edugram.com/?rid=626d1232d1cc97b3',
+  refLink: 'https://sreda.ru/?rid=626d1232d1cc97b3',
   rows: [
     { nick: '@ai_katya', eid: 629522, date: '12 июля', stage: 'приносит оплаты', payments: 18, sum: '9 882 ₽', earned: '494 ₽' },
     { nick: '@neuro_dima', eid: 629547, date: '20 июля', stage: 'приносит оплаты', payments: 11, sum: '6 039 ₽', earned: '302 ₽' },
