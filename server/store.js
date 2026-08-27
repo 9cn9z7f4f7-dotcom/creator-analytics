@@ -252,6 +252,12 @@ let DONE = [
   { i: 104, c: '@sochi_nat', p: 'ig', v: 42000, of: 'Study AI', k: 1.5, by: 'Наталья', dt: '25 июля' },
   { i: 105, c: '@angelo4ek2003', p: 'vk', v: 430000, of: 'Study AI', k: 0.05, by: 'авто', dt: '28 июля' },
   { i: 106, c: '@lovi_neuro', p: 'ig', v: 180000, of: 'Study AI', k: 0.3, by: 'Наталья', dt: '30 июля' },
+  // Единственная запись с реальным ts среди тестовых данных (см. пояснение
+  // выше про ts/30-дневное окно) — специально, чтобы демо-конкурс c5 ниже
+  // (см. CONTESTS) сразу после старта сервера был по-настоящему завершён
+  // и по-настоящему выигран, а не пустой. Без этой записи фича «начисления
+  // за конкурс» не с чем было бы показать на свежем деплое.
+  { i: 999, c: '@marsedzhan', p: 'tt', v: 45000, of: 'Study AI', k: 0.3, by: 'авто', dt: '15 августа', ts: new Date('2026-08-15T12:00:00').getTime() },
 ];
 
 // =============================================================================
@@ -312,6 +318,17 @@ let CONTESTS = [
     d: 'Кто первым найдёт рабочую связку под студенческую аудиторию. Оценивается конверсия, а не объём.',
     period: 'старт в сентябре', left: '—', people: 0, fund: '30 000 ₽', unit: '—',
     my: null, board: [], prizes: [['🥇 1 место', '15 000 ₽'], ['🥈 2 место', '10 000 ₽'], ['🥉 3 место', '5 000 ₽']] },
+
+  // Уже завершённый конкурс (period в прошлом) — на нём сразу после старта
+  // сервера видно, как работает finalizeContest ниже: лидерборд посчитан
+  // по-настоящему из DONE (см. запись @marsedzhan с ts от 15 августа выше),
+  // а приз за 1 место уже лежит начислением в «Мой кабинет» → «Начисления»
+  // и ждёт, пока креатор сам добавит его на баланс.
+  { id: 'c5', of: 'Study AI', n: 'Спринт середины августа', st: 'live', adminStatus: 'идёт',
+    d: 'Кто больше всех принёс оплат по Study AI за две недели.',
+    periodStart: '2026-08-10', periodEnd: '2026-08-20',
+    metric: 'payments', period: 'с 10.08.2026 по 20.08.2026', left: '—', people: 0, fund: '5 000 ₽', unit: 'оплат',
+    my: null, board: [], prizes: [['🥇 1 место', '5 000 ₽']] },
 ];
 
 // Сводные карточки над админской таблицей «Конкурсы» — в прототипе это были
@@ -319,7 +336,7 @@ let CONTESTS = [
 // оставляем их отдельной заглушкой, а не суммой по CONTESTS.
 // TODO(DB): вью contests_admin_summary
 let CONTESTS_ADMIN_SUMMARY = { live: 2, planned: 2, participants: 41, fund: '500 000 ₽' };
-let contestAutoId = 5; // c1..c4 уже заняты историческими конкурсами выше
+let contestAutoId = 6; // c1..c5 уже заняты историческими/демо-конкурсами выше
 
 // ---------------------------------------------------------------------------
 // КОНСТРУКТОР КОНКУРСОВ — считает лидерборд из уже существующих данных
@@ -423,6 +440,7 @@ function recomputeContests() {
     c.left = contestLeftLabel(c, c.st);
     if (c.metric) c.unit = metricUnit(c.metric);
     computeContestBoard(c);
+    finalizeContest(c);
   });
   const fundTotal = CONTESTS.reduce((sum, c) => sum + (Number(String(c.fund || '').replace(/[^\d]/g, '')) || 0), 0);
   CONTESTS_ADMIN_SUMMARY = {
@@ -432,6 +450,67 @@ function recomputeContests() {
     fund: fundTotal ? fundTotal.toLocaleString('ru-RU') + ' ₽' : CONTESTS_ADMIN_SUMMARY.fund,
   };
   return CONTESTS;
+}
+
+// =============================================================================
+// НАЧИСЛЕНИЯ — призовые за конкурсы (креатор «Мой кабинет» → «Начисления»)
+// TODO(DB): таблица accruals (id, creator_nick, type, contest_id, contest_name,
+//           place, sum, text, created_at, claimed, claimed_at)
+//
+// Раньше приз в конкурсе был просто строкой в карточке («🥇 1 место — 15 000 ₽»)
+// и никак не долетал до денег креатора. Теперь, как только конкурс реально
+// завершается (см. contestStatus/recomputeContests выше — считается по
+// periodEnd, не руками), каждое призовое место превращается в отдельное
+// начисление. Деньги не падают на баланс сами — начисление лежит в личном
+// кабинете креатора, и он сам добавляет его на счёт (см. POST
+// /accruals/:id/claim), а история этого начисления (когда выиграл, за какой
+// конкурс, зачислено или нет) остаётся видна и после того, как деньги
+// добавлены — это и есть «выигрыш в конкурсе» в истории, а не безликое
+// пополнение баланса.
+// =============================================================================
+let ACCRUALS = [];
+let accrualAutoId = 1;
+
+// Разбирает подпись призового места («🥇 1 место» → место 1, «4 — 10 место»
+// → места 4..10 включительно) и сумму приза («15 000 ₽» или «по 5 000 ₽» —
+// в обоих случаях это сумма НА ОДНОГО человека; в диапазоне мест её получает
+// каждый, кто в этот диапазон попал).
+function parsePrizeTier(label, amountText) {
+  const nums = String(label).match(/\d+/g) || [];
+  if (!nums.length) return null;
+  const from = Number(nums[0]);
+  const to = nums.length > 1 ? Number(nums[1]) : from;
+  const sum = Number(String(amountText || '').replace(/[^\d]/g, '')) || 0;
+  return { from, to, sum };
+}
+
+// Закрывает конкурс один раз: раздаёт начисления всем, кто попал в призовые
+// места финального board (board на этот момент уже посчитан по DONE — см.
+// computeContestBoard выше — и больше не меняется, т.к. новые ролики с
+// ts после periodEnd в него не попадают). finalized — защита от повторной
+// раздачи призов при следующих пересчётах (тик раз в час, каждый bootstrap).
+function finalizeContest(c) {
+  if (c.finalized) return;
+  if (c.st !== 'ended') return;
+  if (!Array.isArray(c.prizes) || !Array.isArray(c.board) || !c.board.length) { c.finalized = true; return; }
+  const tiers = c.prizes.map((p) => parsePrizeTier(p[0], p[1])).filter(Boolean);
+  c.board.forEach((row, idx) => {
+    const place = idx + 1;
+    const nick = row[0];
+    const tier = tiers.find((t) => place >= t.from && place <= t.to);
+    if (!tier || !tier.sum) return;
+    const entry = {
+      id: accrualAutoId++, type: 'contest', creator: nick, contestId: c.id, contestName: c.n,
+      place, sum: tier.sum, text: 'Конкурс «' + c.n + '» — ' + place + ' место',
+      d: 'сегодня', createdAt: Date.now(), claimed: false, claimedAt: null,
+    };
+    ACCRUALS = [entry, ...ACCRUALS];
+    if (nick === MYNICK) {
+      NOTIF = [{ t: 'cup', ti: 'Победа в конкурсе!', tx: 'Конкурс «' + c.n + '» — ' + place + ' место, приз ' + tier.sum.toLocaleString('ru-RU') + ' ₽. Начисление ждёт в личном кабинете.', tm: 'только что', n: 1 }, ...NOTIF];
+    }
+  });
+  c.finalized = true;
+  c.finalizedAt = Date.now();
 }
 
 // ---------------------------------------------------------------------------
@@ -638,6 +717,9 @@ module.exports = {
   get CONTESTS_ADMIN_SUMMARY() { return CONTESTS_ADMIN_SUMMARY; }, set CONTESTS_ADMIN_SUMMARY(v) { CONTESTS_ADMIN_SUMMARY = v; },
   get contestAutoId() { return contestAutoId; }, set contestAutoId(v) { contestAutoId = v; },
   metricUnit, metricLabel, fmtMetricValue, recomputeContests, computeContestBoard,
+  get ACCRUALS() { return ACCRUALS; }, set ACCRUALS(v) { ACCRUALS = v; },
+  get accrualAutoId() { return accrualAutoId; }, set accrualAutoId(v) { accrualAutoId = v; },
+  finalizeContest, parsePrizeTier,
   buildPayoutTemplate, recomputePayoutTemplates,
   get RATES() { return RATES; }, set RATES(v) { RATES = v; },
   get MIN_VIEWS() { return MIN_VIEWS; }, set MIN_VIEWS(v) { MIN_VIEWS = v; },
