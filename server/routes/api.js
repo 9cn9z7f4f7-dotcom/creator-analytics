@@ -44,6 +44,7 @@ router.get('/bootstrap', (req, res) => {
     payouts: store.PAYQ,
     withdrawals: store.WD,
     balance: store.BAL,
+    accruals: store.ACCRUALS,
     notifications: store.NOTIF,
     schoolMine: store.SCHOOL_MINE,
     schoolAdmin: store.SCHOOL_ADMIN,
@@ -485,6 +486,33 @@ router.post('/withdrawals', (req, res) => {
     withdrawals: store.WD,
     payouts: store.PAYQ,
     videos: store.VIDEOS,
+    balance: store.BAL,
+    notification: notif,
+  });
+});
+
+// ---------------------------------------------------------------------------
+// НАЧИСЛЕНИЯ (креатор) — призовые за конкурсы, см. store.finalizeContest.
+// Само начисление появляется само, когда конкурс завершается (см.
+// recomputeContests, дёргается на каждый bootstrap и раз в час). А вот
+// добавление на баланс — отдельное осознанное действие креатора.
+// ---------------------------------------------------------------------------
+router.get('/accruals', (req, res) => res.json(store.ACCRUALS));
+
+router.post('/accruals/:id/claim', (req, res) => {
+  const id = Number(req.params.id);
+  const a = store.ACCRUALS.find((x) => x.id === id);
+  if (!a) return res.status(404).json({ error: 'Начисление не найдено' });
+  if (a.creator !== store.MYNICK) return res.status(403).json({ error: 'Это начисление не ваше' });
+  if (a.claimed) return res.status(400).json({ error: 'Уже добавлено на счёт' });
+
+  a.claimed = true;
+  a.claimedAt = Date.now();
+  store.BAL = store.BAL + a.sum;
+  const notif = pushNotif('money', 'Приз добавлен на счёт', a.text + ' · ' + a.sum.toLocaleString('ru-RU') + ' ₽ зачислены на баланс.');
+
+  res.json({
+    accruals: store.ACCRUALS,
     balance: store.BAL,
     notification: notif,
   });
