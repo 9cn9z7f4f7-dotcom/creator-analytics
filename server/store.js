@@ -51,6 +51,25 @@ function levelMultForNick(nick, snapshotLv) {
   const lv = snapshotLv || (CREATORS.find((c) => c.n === nick) || {}).lv || 1;
   return LVM[lv] || 1;
 }
+// Множитель темы недели по офферу. РАНЬШЕ он нигде не участвовал в pay() —
+// был только текстом в карточке креатора («Коэффициент повышен до ×1,2»).
+// Ролик по офферу темы недели стоил ровно столько же, сколько любой другой,
+// и это баг: креатору обещают повышенный коэффициент, а платят по базовому.
+// Теперь это обязательная часть формулы pay() везде, где считаются реальные
+// деньги — по аналогии с levelMultForNick выше.
+//
+// Момент, когда множитель "снимается" — это момент реального подтверждения
+// события (авто-приём при разметке с k=0.05 или ручной approve модератором),
+// то есть ровно stream-момент. Полученное значение сохраняется на записи
+// DONE отдельным полем (wtm) и дальше НЕ пересчитывается по текущей теме
+// недели — правка коэффициента формата (redo) и снятие ролика (delete)
+// используют это же сохранённое значение. Иначе смена темы недели админом
+// задним числом меняла бы уже начисленные суммы, а это именно то, чего
+// нельзя допускать (см. историю с конкурсами/начислениями — креатор должен
+// доверять кабинету).
+function weekThemeMultFor(offerKey) {
+  return (WEEK_THEME.offerKey && offerKey === WEEK_THEME.offerKey) ? (Number(WEEK_THEME.multiplier) || 1) : 1;
+}
 function fmtViews(v) {
   return v >= 1000 ? (v / 1000).toFixed(1).replace('.0', '') + 'K' : String(v);
 }
@@ -409,7 +428,7 @@ function computeContestBoard(c) {
     b.payments += 1;
     b.views_sum += d.v;
     b.views_max = Math.max(b.views_max, d.v);
-    b.earned += pay(d.v, RATE[d.of] * levelMultForNick(d.c, d.lv), d.k);
+    b.earned += pay(d.v, RATE[d.of] * levelMultForNick(d.c, d.lv) * (d.wtm || 1), d.k);
   });
   const ranked = Object.keys(byCreator)
     .map((nick) => ({ nick, value: byCreator[nick][c.metric] }))
@@ -701,7 +720,7 @@ let adminOfferAutoId = 7;
 
 module.exports = {
   clone,
-  pay, fmtViews, ruPlural, ruDays, levelMultForNick,
+  pay, fmtViews, ruPlural, ruDays, levelMultForNick, weekThemeMultFor,
   suggestNameFromNick, isNameTaken,
   OFFERS, FORMATS, VIDEOS, CREATORS, LVN, LVG,
   get LVM() { return LVM; }, set LVM(v) { LVM = v; },
