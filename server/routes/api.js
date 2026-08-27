@@ -114,15 +114,18 @@ router.post('/videos/:id/mark', (req, res) => {
     const lv = creator ? creator.lv : 1;
     // Ставка за просмотр умножается на надбавку уровня — так же, как её
     // видит сам креатор на калькуляторе, иначе показанная сумма разъедется
-    // с тем, что реально попадёт в историю принятых.
-    const amount = pay(v.v, store.RATE[offerKey] * (store.LVM[lv] || 1), kk);
+    // с тем, что реально попадёт в историю принятых. Множитель темы недели —
+    // туда же и по той же причине (см. weekThemeMultFor в store.js): раньше
+    // он был только текстом в интерфейсе и на реальные деньги не влиял.
+    const wtm = store.weekThemeMultFor(offerKey);
+    const amount = pay(v.v, store.RATE[offerKey] * (store.LVM[lv] || 1) * wtm, kk);
     const doneEntry = {
-      i: store.doneAutoId, c: store.MYNICK, p: v.p, v: v.v, of: offerKey, k: kk, lv,
+      i: store.doneAutoId, c: store.MYNICK, p: v.p, v: v.v, of: offerKey, k: kk, lv, wtm,
       by: 'авто', dt: 'сегодня', ts: Date.now(),
     };
     store.doneAutoId = store.doneAutoId + 1;
     store.DONE = [doneEntry, ...store.DONE];
-    notif = pushNotif('ok', 'Ролик принят', 'Автоматически · ' + fmtViews(v.v) + ' просмотров · начислено ' + amount.toLocaleString('ru-RU') + ' ₽');
+    notif = pushNotif('ok', 'Ролик принят', 'Автоматически · ' + fmtViews(v.v) + ' просмотров · начислено ' + amount.toLocaleString('ru-RU') + ' ₽' + (wtm > 1 ? ' (с темой недели ×' + String(wtm).replace('.', ',') + ')' : ''));
     levelChange = store.recalcCreatorLevel(store.MYNICK);
   } else {
     // Любой другой формат — ролик уходит в очередь модерации админу,
@@ -222,16 +225,20 @@ router.post('/moderation/:i/approve', (req, res) => {
   m.viewed = true;
   // Ставка умножается на надбавку уровня, зафиксированного за креатором в
   // момент разметки (m.lv) — так сумма совпадает с тем, что креатор видел
-  // на своём калькуляторе, а не считается по голой базовой ставке.
-  const amount = pay(m.v, store.RATE[m.of] * store.levelMultForNick(m.c, m.lv), m.k);
+  // на своём калькуляторе, а не считается по голой базовой ставке. Множитель
+  // темы недели снимается прямо сейчас, в момент подтверждения (это и есть
+  // stream-событие) — и сохраняется на записи (wtm), чтобы дальнейшая правка
+  // коэффициента или снятие ролика не пересчитывали его по текущей теме.
+  const wtm = store.weekThemeMultFor(m.of);
+  const amount = pay(m.v, store.RATE[m.of] * store.levelMultForNick(m.c, m.lv) * wtm, m.k);
 
   let notif;
   if (m.why) {
     notif = pushNotif('down', 'Коэффициент изменён', m.c + ' · ролик на ' + fmtViews(m.v) + ': коэффициент ' + String(m.k).replace('.', ',') + '. Причина: ' + m.why);
   } else {
-    notif = pushNotif('ok', 'Ролик принят', m.c + ' · ' + fmtViews(m.v) + ' просмотров · начислено ' + amount.toLocaleString('ru-RU') + ' ₽');
+    notif = pushNotif('ok', 'Ролик принят', m.c + ' · ' + fmtViews(m.v) + ' просмотров · начислено ' + amount.toLocaleString('ru-RU') + ' ₽' + (wtm > 1 ? ' (с темой недели ×' + String(wtm).replace('.', ',') + ')' : ''));
   }
-  store.DONE = [{ ...m, by: 'Наталья', dt: 'сегодня', ts: Date.now() }, ...store.DONE];
+  store.DONE = [{ ...m, wtm, by: 'Наталья', dt: 'сегодня', ts: Date.now() }, ...store.DONE];
   store.MOD = store.MOD.filter((x) => x.i !== i);
   const levelChange = store.recalcCreatorLevel(m.c);
 
@@ -250,9 +257,15 @@ router.post('/moderation/done/:i/redo', (req, res) => {
   const { k, why } = req.body || {};
   const kk = Number(k);
   const mult = store.levelMultForNick(d.c, d.lv);
-  const was = pay(d.v, store.RATE[d.of] * mult, d.k);
+  // wtm читаем из снэпшота на самой записи (см. weekThemeMultFor в store.js),
+  // а не пересчитываем по текущей теме недели — редактирование коэффициента
+  // формата не должно задним числом менять множитель темы, снятый ещё при
+  // приёме ролика. У записей до этой правки (старые тестовые данные) поля
+  // wtm нет — считаем это отсутствием буста, а не додумываем его.
+  const wtm = d.wtm || 1;
+  const was = pay(d.v, store.RATE[d.of] * mult * wtm, d.k);
   d.k = kk;
-  const now = pay(d.v, store.RATE[d.of] * mult, kk);
+  const now = pay(d.v, store.RATE[d.of] * mult * wtm, kk);
   const diff = now - was;
   d.by = 'Наталья';
   d.dt = 'изменено сегодня';
@@ -271,7 +284,7 @@ router.delete('/moderation/done/:i', (req, res) => {
   const idx = store.DONE.findIndex((x) => x.i === i);
   if (idx === -1) return res.status(404).json({ error: 'Ролик не найден среди принятых' });
   const d = store.DONE[idx];
-  const was = pay(d.v, store.RATE[d.of] * store.levelMultForNick(d.c, d.lv), d.k);
+  const was = pay(d.v, store.RATE[d.of] * store.levelMultForNick(d.c, d.lv) * (d.wtm || 1), d.k);
   store.DONE = store.DONE.filter((x) => x.i !== i);
   const levelChange = store.recalcCreatorLevel(d.c);
   res.json({ done: store.DONE, was, creator: d.c, levelChange });
