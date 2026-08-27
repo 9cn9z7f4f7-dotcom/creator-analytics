@@ -307,6 +307,48 @@ router.get('/contests', (req, res) => {
 });
 
 const CONTEST_METRICS = ['payments', 'views_sum', 'views_max', 'earned'];
+const CONTEST_DISTRIBUTIONS = ['ranked', 'proportional'];
+const CONTEST_PARTICIPANTS_MODES = ['all', 'opt_in', 'selected'];
+
+// Общая валидация двух новых полей конкурса (см. rasshirenie_konkursov.md):
+// distribution (как делится фонд) и participants (кто участвует). Общая
+// для POST и PATCH, чтобы не разъезжались две копии одной и той же логики.
+// existing — текущий конкурс при PATCH (null при создании) — нужен для
+// двух вещей: (1) не требовать fundAmount заново, если он уже был указан
+// и админ просто поправил, скажем, название; (2) не затирать список тех,
+// кто уже нажал «Участвовать» в opt_in-конкурсе, правкой формы.
+function validateContestExtras(b, existing) {
+  const distribution = CONTEST_DISTRIBUTIONS.includes(b.distribution) ? b.distribution : 'ranked';
+  const participantsMode = CONTEST_PARTICIPANTS_MODES.includes(b.participants) ? b.participants : 'all';
+
+  let fundAmount = existing ? existing.fundAmount : null;
+  if (distribution === 'proportional') {
+    const parsed = Number(b.fundAmount);
+    if (Number.isFinite(parsed) && parsed > 0) fundAmount = parsed;
+    if (!Number.isFinite(fundAmount) || fundAmount <= 0) {
+      return { error: 'Для пропорционального дележа укажите размер фонда числом больше нуля' };
+    }
+  }
+
+  let participantsList = [];
+  if (participantsMode === 'selected') {
+    const requested = Array.isArray(b.participantsList) ? b.participantsList : [];
+    participantsList = requested.filter((nick) => store.CREATORS.some((cr) => cr.n === nick));
+    if (!participantsList.length) {
+      return { error: 'Выберите хотя бы одного участника для режима «выбранные вручную»' };
+    }
+  } else if (participantsMode === 'opt_in') {
+    // Список уже присоединившихся нельзя затирать правкой конкурса —
+    // редактирование названия/периода не должно отменять чужие заявки на
+    // участие. Сохраняем прежний список, если режим не менялся; если
+    // конкурс только что переключили на opt_in — список стартует пустым.
+    participantsList = (existing && existing.participants === 'opt_in' && Array.isArray(existing.participantsList))
+      ? existing.participantsList
+      : [];
+  }
+
+  return { distribution, participantsMode, fundAmount, participantsList };
+}
 
 router.post('/contests', (req, res) => {
   const b = req.body || {};
@@ -320,6 +362,8 @@ router.post('/contests', (req, res) => {
   if (new Date(periodStart).getTime() > new Date(periodEnd).getTime()) {
     return res.status(400).json({ error: 'Дата начала позже даты окончания' });
   }
+  const extras = validateContestExtras(b, null);
+  if (extras.error) return res.status(400).json({ error: extras.error });
   const prizes = Array.isArray(b.prizes)
     ? b.prizes.filter((p) => Array.isArray(p) && String(p[0] || '').trim() && String(p[1] || '').trim())
       .map((p) => [String(p[0]).trim(), String(p[1]).trim()])
@@ -334,7 +378,14 @@ router.post('/contests', (req, res) => {
     d: (b.description || '').trim(),
     periodStart, periodEnd,
     period: 'с ' + new Date(periodStart).toLocaleDateString('ru-RU') + ' по ' + new Date(periodEnd).toLocaleDateString('ru-RU'),
-    fund: (b.fund || '').trim() || '—',
+    // fund — текст для витрины. Для proportional формируем его сами из
+    // числового fundAmount (на нём и правда считаются деньги), а не берём
+    // то, что ввели в свободном текстовом поле — иначе цифры могут разъехаться.
+    fund: extras.distribution === 'proportional' ? (extras.fundAmount.toLocaleString('ru-RU') + ' ₽') : ((b.fund || '').trim() || '—'),
+    fundAmount: extras.fundAmount,
+    distribution: extras.distribution,
+    participants: extras.participantsMode,
+    participantsList: extras.participantsList,
     prizes,
     board: [], people: 0, my: null,
   };
@@ -357,13 +408,40 @@ router.patch('/contests/:id', (req, res) => {
   if (b.periodStart || b.periodEnd) {
     c.period = 'с ' + new Date(c.periodStart).toLocaleDateString('ru-RU') + ' по ' + new Date(c.periodEnd).toLocaleDateString('ru-RU');
   }
-  if (b.fund != null) c.fund = String(b.fund).trim() || '—';
+
+  const extras = validateContestExtras(b, c);
+  if (extras.error) return res.status(400).json({ error: extras.error });
+  c.distribution = extras.distribution;
+  c.participants = extras.participantsMode;
+  c.participantsList = extras.participantsList;
+  if (extras.distribution === 'proportional') {
+    c.fundAmount = extras.fundAmount;
+    c.fund = extras.fundAmount.toLocaleString('ru-RU') + ' ₽';
+  } else if (b.fund != null) {
+    c.fund = String(b.fund).trim() || '—';
+  }
+
   if (Array.isArray(b.prizes)) {
     c.prizes = b.prizes.filter((p) => Array.isArray(p) && String(p[0] || '').trim() && String(p[1] || '').trim())
       .map((p) => [String(p[0]).trim(), String(p[1]).trim()]);
   }
   store.recomputeContests();
   res.json({ contests: store.CONTESTS, contestsAdminSummary: store.CONTESTS_ADMIN_SUMMARY });
+});
+
+// Участие в конкурсе (креатор) — для participants='opt_in'. Раньше кнопки
+// «Участвовать» в интерфейсе не было вообще, хотя текст её обещал
+// («Участвовать может любой креатор») — теперь это реальный список,
+// который читает aggregateContestEntries в store.js.
+router.post('/contests/:id/join', (req, res) => {
+  const c = store.CONTESTS.find((x) => x.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'Конкурс не найден' });
+  if (c.participants !== 'opt_in') return res.status(400).json({ error: 'В этом конкурсе не нужно отдельно участвовать' });
+  if (c.st === 'ended') return res.status(400).json({ error: 'Конкурс уже завершён' });
+  if (!Array.isArray(c.participantsList)) c.participantsList = [];
+  if (!c.participantsList.includes(store.MYNICK)) c.participantsList.push(store.MYNICK);
+  store.recomputeContests();
+  res.json({ contests: store.CONTESTS });
 });
 
 router.delete('/contests/:id', (req, res) => {
