@@ -1169,9 +1169,9 @@
         <div class="calc">
           <div class="f"><label>Просмотры</label><input type="number" id="cv" value="100000" oninput="calc()"></div>
           <div class="f"><label>Оффер</label><select id="cr" onchange="calc()">
-            <option value="0.15">Study AI</option>
-            <option value="0.20">Кэмп</option>
-            <option value="0.10">Автор24</option>
+            <option value="0.15" data-of="Study AI">Study AI</option>
+            <option value="0.20" data-of="Кэмп">Кэмп</option>
+            <option value="0.10" data-of="Автор24">Автор24</option>
           </select></div>
           <div class="f"><label>Формат ролика</label><select id="ck" onchange="calc()">
             <option value="0.05">0,05 — просто упоминание</option>
@@ -1925,7 +1925,7 @@ function drawVid(){
  const tb=document.getElementById('vtb'); if(!tb) return;
  if(!list.length){ tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:22px 0;">За этот период роликов нет</td></tr>'; return; }
  tb.innerHTML=list.map(x=>{
-  const pl=PL[x.p], pay=(x.st==='ok')?Math.round(x.v*(RATE[x.of]||0)*(LVM[MYLV]||1)*x.k):0;
+  const pl=PL[x.p], pay=(x.st==='ok')?Math.round(x.v*(RATE[x.of]||0)*(LVM[MYLV]||1)*wtmFor(x.of)*x.k):0;
   const f=FMT.find(y=>y.k===x.k);
   let cell;
   if(x.st==='small') cell='<span class="zero">—</span>';
@@ -1944,13 +1944,14 @@ let markId=null;
 function markRecalc(){
  const x=VID.find(y=>y.i===markId); if(!x) return;
  const of=document.getElementById('mkOf').value;
- const rate=RATE[of]*LVM[MYLV];
+ const wtm=wtmFor(of);
+ const rate=RATE[of]*LVM[MYLV]*wtm;
  document.querySelectorAll('#mkB .fp').forEach(el=>{
   const k=+el.dataset.pay;
   el.textContent=Math.round(x.v*rate*k).toLocaleString('ru-RU')+' ₽';
  });
  const rl=document.getElementById('mkRate');
- if(rl) rl.innerHTML='Ставка по офферу «'+of+'» на твоём уровне — <b>'+rate.toFixed(3).replace(/0$/,'').replace('.',',')+' ₽</b> за просмотр';
+ if(rl) rl.innerHTML='Ставка по офферу «'+of+'» на твоём уровне — <b>'+rate.toFixed(3).replace(/0$/,'').replace('.',',')+' ₽</b> за просмотр'+(wtm>1?' <span style="color:#166534">(с темой недели ×'+String(wtm).replace('.',',')+')</span>':'');
 }
 function openMark(i){
  markId=i;
@@ -1991,14 +1992,17 @@ function markSend(){
 
 function calc(){
  const v=+document.getElementById('cv').value||0;
- const base=+document.getElementById('cr').value;
+ const crSel=document.getElementById('cr');
+ const base=+crSel.value;
+ const of=crSel.selectedOptions[0]&&crSel.selectedOptions[0].dataset.of;
  const k=+document.getElementById('ck').value;
- const r=base*LVM[MYLV];
+ const wtm=wtmFor(of);
+ const r=base*LVM[MYLV]*wtm;
  const pay=v>=5000?Math.round(v*r*k):0;
  const rs=r.toFixed(3).replace(/0$/,'').replace('.',',');
  document.getElementById('cf').innerHTML=v<5000
   ? 'Меньше 5 000 просмотров — в оплату не идёт'
-  : v.toLocaleString('ru-RU')+' × <b>'+rs+' ₽</b> × '+String(k).replace('.',',')+' <span style="color:#166534;opacity:.7">(ставка '+MYLV+' уровня)</span>';
+  : v.toLocaleString('ru-RU')+' × <b>'+rs+' ₽</b> × '+String(k).replace('.',',')+' <span style="color:#166534;opacity:.7">(ставка '+MYLV+' уровня'+(wtm>1?' + тема недели ×'+String(wtm).replace('.',','):'')+')</span>';
  document.getElementById('co').textContent=pay.toLocaleString('ru-RU')+' ₽';
 }
 
@@ -2031,6 +2035,16 @@ let MYLV=1;
 function lvMultFor(nick,snapshotLv){
  const lv=snapshotLv||(D.find(x=>x.n===nick)||{}).lv||1;
  return LVM[lv]||1;
+}
+// Множитель темы недели по офферу — зеркало weekThemeMultFor() на бекенде.
+// Для превью (калькулятор, форма разметки, очередь на проверку) считаем
+// живьём от текущей WEEK_THEME — это ещё не начисленные деньги, а прогноз
+// "сколько будет, если подтвердить сейчас". А для уже принятых роликов
+// (drawDone) множитель не пересчитываем — берём готовое поле wtm с бекенда,
+// снятое в момент реального начисления, чтобы правка темы недели админом не
+// меняла на экране задним числом то, что уже начислено.
+function wtmFor(of){
+ return (WEEK_THEME&&WEEK_THEME.offerKey&&of===WEEK_THEME.offerKey)?(+WEEK_THEME.multiplier||1):1;
 }
 function applyLevelChange(lc){
  if(!lc||!lc.changed) return;
@@ -2244,7 +2258,7 @@ function drawMod(){
  if(!tb) return;
  tb.innerHTML=MOD.map(m=>{
   const pl=PL[m.p], f=FMT.find(y=>y.k===m.k);
-  const pay=Math.round(m.v*RATE[m.of]*(LVM[m.lv]||1)*m.k);
+  const pay=Math.round(m.v*RATE[m.of]*(LVM[m.lv]||1)*wtmFor(m.of)*m.k);
   const btns=FMT.map(x=>'<button class="kbtn'+(x.k===m.k?' on':'')+'" title="'+x.n+'" onclick="setK('+m.i+','+x.k+')">'+String(x.k).replace('.',',')+'</button>').join('');
   return '<tr><td>'+m.c+' <span class="tag m">'+m.lv+'</span>'+(m.viewed?'':' <span class="tag r">новое</span>')+'</td>'+
   '<td data-l="Охваты"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i></span></td>'+
@@ -2284,7 +2298,7 @@ function drawDone(){
  const tb=document.getElementById('donetb'); if(!tb) return;
  const q=(document.getElementById('dq').value||'').toLowerCase();
  tb.innerHTML=DONE.filter(d=>d.c.toLowerCase().includes(q)).map(d=>{
-  const pl=PL[d.p], pay=Math.round(d.v*RATE[d.of]*lvMultFor(d.c,d.lv)*d.k);
+  const pl=PL[d.p], pay=Math.round(d.v*RATE[d.of]*lvMultFor(d.c,d.lv)*(d.wtm||1)*d.k);
   const btns=FMT.map(x=>'<button class="kbtn'+(x.k===d.k?' on':'')+'" title="'+x.n+'" onclick="redoK('+d.i+','+x.k+')">'+String(x.k).replace('.',',')+'</button>').join('');
   return '<tr><td>'+d.c+'</td>'+
   '<td data-l="Креатор"><span class="plat"><i style="background:'+pl[0]+'"><i class="ti '+pl[1]+'"></i></i></span></td>'+
