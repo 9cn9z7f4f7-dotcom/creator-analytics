@@ -1141,6 +1141,12 @@
       </div>
     </div></div>
 
+    <h2>Начисления<span class="qm" onclick="qq(event,'accruals')">?</span></h2>
+    <div class="box"><div class="scroll"><table class="dt">
+      <thead><tr><th>Дата</th><th>Что</th><th>Сумма</th><th>Статус</th><th></th></tr></thead>
+      <tbody id="acctb"></tbody>
+    </table></div></div>
+
     <h2>История выводов<span class="qm" onclick="qq(event,'wd')">?</span></h2>
     <div class="box"><div class="scroll"><table class="dt">
       <thead><tr><th>Дата</th><th>Сумма</th><th>Способ</th><th>Роликов</th><th>Статус</th></tr></thead>
@@ -2864,6 +2870,30 @@ function doWithdraw(){
   .catch(()=>t('Не удалось создать заявку'));
 }
 
+/* ===== НАЧИСЛЕНИЯ (призовые за конкурсы) ===== */
+let ACCRUALS=[];
+function drawAccruals(){
+ const tb=document.getElementById('acctb'); if(!tb) return;
+ tb.innerHTML=ACCRUALS.length?ACCRUALS.map(x=>
+  '<tr><td data-l="Дата">'+x.d+'</td><td data-l="Что">'+x.text+'</td>'+
+  '<td data-l="Сумма" class="money">'+x.sum.toLocaleString('ru-RU')+' ₽</td>'+
+  '<td data-l="Статус"><span class="tag '+(x.claimed?'g':'m')+'">'+(x.claimed?'на счету':'не зачислено')+'</span></td>'+
+  '<td style="white-space:nowrap;">'+(x.claimed?'':'<button class="btn p" onclick="claimAccrual('+x.id+')"><i class="ti ti-wallet"></i>Добавить на счёт</button>')+'</td></tr>').join('')
+  :'<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px 0;">Начислений пока не было</td></tr>';
+}
+function claimAccrual(id){
+ fetch('/api/accruals/'+id+'/claim',{method:'POST'})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось добавить на счёт'); return; }
+   ACCRUALS=d.accruals; BAL=d.balance;
+   if(d.notification){ NOTIF=[d.notification,...NOTIF]; drawNotif(); }
+   drawAccruals(); drawWD();
+   t('Приз зачислен на баланс');
+  })
+  .catch(()=>t('Не удалось добавить на счёт'));
+}
+
 /* ===== УВЕДОМЛЕНИЯ ===== */
 const NI={ok:['ti-check','var(--green-bg)','var(--green)'],down:['ti-arrow-down','var(--amber-bg)','var(--amber)'],
  money:['ti-coin','var(--green-bg)','var(--green)'],lvl:['ti-award','var(--violet-bg)','var(--violet)'],
@@ -3294,6 +3324,7 @@ const QT={
  ascout:'Кто кого привёл. Связка берётся из поля «Источник прихода» в эдуграме, отдельный учёт вести не нужно.',
  abrief:'Заявки, которые оставили заказчики через лендинг.',
  wd:'Здесь видно, что и когда выводилось. Ролики, попавшие в вывод, помечаются как «выведено» — так не запутаешься, за что уже получил деньги. Выводить можно из личного кабинета SREDA в любой день или на карту по вторникам, от 1 000 ₽.',
+ accruals:'Призовые за конкурсы. Как только конкурс заканчивается, приз падает сюда — и остаётся здесь как история, даже после того, как ты добавишь его на баланс кнопкой «Добавить на счёт».',
 };
 function qq(e,key){
  e.stopPropagation();
@@ -3509,7 +3540,7 @@ async function boot(){
   MOD=d.moderation; RATE=d.rate; DONE=d.done;
   TOPVID=d.topVideos; CONTESTS=d.contests; CONTESTS_ADMIN_SUMMARY=d.contestsAdminSummary;
   RATES=d.rates; MIN_VIEWS=d.minViews; WEEK_THEME=d.weekTheme;
-  PAYQ=d.payouts; WD=d.withdrawals; BAL=d.balance; NOTIF=d.notifications;
+  PAYQ=d.payouts; WD=d.withdrawals; BAL=d.balance; ACCRUALS=d.accruals; NOTIF=d.notifications;
   SCHOOL_MINE=d.schoolMine; SCHOOL_ADMIN=d.schoolAdmin;
   SCOUT_MINE=d.scoutMine; SCOUT_ADMIN=d.scoutAdmin;
   BRIEFS=d.briefs; ADMIN_OFFERS=d.adminOffers;
@@ -3521,7 +3552,7 @@ async function boot(){
   drawOffers();
   fillCreator(me);
   drawRates(); drawWeekTheme(); drawContests(); drawAdminContests();
-  drawNotif(); drawWD(); drawPay(); calc();
+  drawNotif(); drawWD(); drawAccruals(); drawPay(); calc();
   drawAdminOffersTable(); drawBriefs();
   drawSchoolMine(); drawSchoolAdmin(); drawScoutMine(); drawScoutAdmin();
   setPeriod(30);
