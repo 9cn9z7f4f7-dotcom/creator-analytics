@@ -1278,13 +1278,14 @@
       <button class="btn" style="margin-bottom:16px;" onclick="ctBack()"><i class="ti ti-arrow-left"></i>Все конкурсы</button>
       <h1 id="ctdName">—</h1>
       <p class="sub" id="ctdSub">—</p>
+      <button class="btn p" id="ctdJoinBtn" style="display:none;margin-bottom:14px;" onclick="ctJoin()"><i class="ti ti-flag"></i>Участвовать</button>
       <div class="cards" style="margin-bottom:18px;" id="ctdCards"></div>
       <div class="note" id="ctdRules"><i class="ti ti-info-circle"></i><div></div></div>
       <div class="box">
         <div class="bh">Рейтинг <span class="mut" id="ctdUpd">обновлён сегодня в 09:00</span></div>
         <div id="ctdBoard"></div>
       </div>
-      <div class="box"><div class="bh">Призовой фонд</div><div class="bp" id="ctdPrizes"></div></div>
+      <div class="box" id="ctdPrizesBox"><div class="bh">Призовой фонд</div><div class="bp" id="ctdPrizes"></div></div>
     </div>
   </div>
 
@@ -1617,10 +1618,29 @@
         <span style="padding:0 6px;color:var(--text-muted);">—</span>
         <input type="date" id="ctfTo" style="flex:1;background:#fff;color:var(--text);">
       </div>
-      <div class="row"><label>Призовой фонд</label><input id="ctfFund" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: 200 000 ₽"></div>
+      <div class="row"><label>Дележ фонда</label><select id="ctfDistribution" style="flex:1;background:#fff;color:var(--text);" onchange="ctToggleDistribution()">
+        <option value="ranked">По местам (как сейчас)</option>
+        <option value="proportional">Пропорционально доле метрики</option>
+      </select></div>
+      <div id="ctfRankedBlock">
+        <div class="row"><label>Призовой фонд</label><input id="ctfFund" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: 200 000 ₽"></div>
+      </div>
+      <div id="ctfProportionalBlock" style="display:none;">
+        <div class="row"><label>Размер фонда, ₽</label><input id="ctfFundAmount" type="number" min="0" step="1000" style="flex:1;background:#fff;color:var(--text);" placeholder="Например: 300000"></div>
+        <div class="note" style="margin-top:0;"><i class="ti ti-info-circle"></i><div>Каждый участник получает свою долю фонда пропорционально метрике: набрал 24% от общей суммы — забрал 24% фонда. Считается один раз при закрытии конкурса.</div></div>
+      </div>
+      <div class="row"><label>Участники</label><select id="ctfParticipants" style="flex:1;background:#fff;color:var(--text);" onchange="ctToggleParticipants()">
+        <option value="all">Вся база (автоматически)</option>
+        <option value="opt_in">По кнопке «Участвовать»</option>
+        <option value="selected">Выбранные вручную</option>
+      </select></div>
+      <div id="ctfSelectedBlock" style="display:none;margin-top:8px;">
+        <label style="font-size:12.5px;color:var(--text-2);display:block;margin-bottom:6px;">Кто участвует</label>
+        <div id="ctfSelectedList" style="max-height:160px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:8px 10px;"></div>
+      </div>
       <div style="margin-top:12px;"><label style="font-size:12.5px;color:var(--text-2);display:block;margin-bottom:5px;">Описание / условия</label>
       <textarea id="ctfDesc" placeholder="Кто и как участвует, минимальный порог"></textarea></div>
-      <div style="margin-top:14px;">
+      <div style="margin-top:14px;" id="ctfPrizesBlock">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <label style="font-size:12.5px;color:var(--text-2);">Призовые места</label>
           <button class="btn" style="padding:4px 10px;font-size:12px;" onclick="ctAddPrizeRow()"><i class="ti ti-plus"></i>Место</button>
@@ -2378,7 +2398,12 @@ function drawContests(){
  const offs=['Все',...new Set(CONTESTS.map(c=>c.of))];
  document.getElementById('ctFilters').innerHTML=offs.map(o=>
   '<button class="'+(o===ctFilter?'on':'')+'" onclick="ctFilter=\''+o+'\';drawContests()">'+o+'</button>').join('');
- const list=CONTESTS.filter(c=>ctFilter==='Все'||c.of===ctFilter);
+ // Конкурс с participants='selected', где меня нет в списке — не мой,
+ // в ленте вообще не показываем (см. rasshirenie_konkursov.md: «не-участник
+ // этот конкурс не видит вообще»). opt_in, наоборот, должен быть виден
+ // всем — иначе некому будет на него нажать «Участвовать».
+ const list=CONTESTS.filter(c=>(ctFilter==='Все'||c.of===ctFilter)
+  &&!(c.participants==='selected'&&!(c.participantsList||[]).includes(MYNICK)));
  document.getElementById('ctCards').innerHTML=list.map(c=>
   '<div class="ct '+(c.st==='soon'?'off':'')+'" '+(c.st==='live'?'onclick="ctOpen(\''+c.id+'\')"':'')+'>'+
   '<div class="cth"><div><h3>'+c.n+'</h3><div class="of">'+c.of+'</div></div>'+
@@ -2428,8 +2453,35 @@ function ctDrawPrizes(){
   '</div>').join(''))||'<div style="font-size:12.5px;color:var(--text-muted);">Пока нет призовых мест</div>';
 }
 function ctAddPrizeRow(){ ctPrizes.push(['','']); ctDrawPrizes(); }
+
+// Дележ фонда: ranked показывает старый блок «Призовой фонд» (текст) +
+// призовые места, proportional — числовое поле фонда и прячет призовые
+// места (там они не нужны — платит доля, а не место).
+function ctToggleDistribution(){
+ const v=document.getElementById('ctfDistribution').value;
+ document.getElementById('ctfRankedBlock').style.display=v==='ranked'?'':'none';
+ document.getElementById('ctfProportionalBlock').style.display=v==='proportional'?'':'none';
+ document.getElementById('ctfPrizesBlock').style.display=v==='proportional'?'none':'';
+}
+let ctSelected=[];
+function ctDrawSelectedList(){
+ const el=document.getElementById('ctfSelectedList'); if(!el) return;
+ el.innerHTML=D.map(cr=>
+  '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;cursor:pointer;">'+
+  '<input type="checkbox" '+(ctSelected.includes(cr.n)?'checked':'')+' onchange="ctToggleSelected(\''+cr.n+'\',this.checked)">'+
+  (escHtml(cr.name)||cr.n)+' <span style="color:var(--text-muted);">'+cr.n+'</span></label>').join('')
+  ||'<div style="font-size:12.5px;color:var(--text-muted);">Список креаторов пуст</div>';
+}
+function ctToggleSelected(nick,checked){
+ ctSelected=checked?[...new Set([...ctSelected,nick])]:ctSelected.filter(n=>n!==nick);
+}
+function ctToggleParticipants(){
+ const v=document.getElementById('ctfParticipants').value;
+ document.getElementById('ctfSelectedBlock').style.display=v==='selected'?'':'none';
+ if(v==='selected') ctDrawSelectedList();
+}
 function openContestNew(){
- ctEditId=null; ctPrizes=[['🥇 1 место',''],['🥈 2 место',''],['🥉 3 место','']];
+ ctEditId=null; ctPrizes=[['🥇 1 место',''],['🥈 2 место',''],['🥉 3 место','']]; ctSelected=[];
  document.getElementById('ctFormT').textContent='Новый конкурс';
  document.getElementById('ctfName').value='';
  document.getElementById('ctfOffer').value='';
@@ -2437,13 +2489,16 @@ function openContestNew(){
  document.getElementById('ctfFrom').value='';
  document.getElementById('ctfTo').value='';
  document.getElementById('ctfFund').value='';
+ document.getElementById('ctfFundAmount').value='';
+ document.getElementById('ctfDistribution').value='ranked';
+ document.getElementById('ctfParticipants').value='all';
  document.getElementById('ctfDesc').value='';
- ctDrawPrizes();
+ ctToggleDistribution(); ctToggleParticipants(); ctDrawPrizes();
  document.getElementById('ovContest').classList.add('on');
 }
 function openContestEdit(id){
  const c=CONTESTS.find(x=>x.id===id); if(!c) return;
- ctEditId=id; ctPrizes=(c.prizes||[]).map(p=>[p[0],p[1]]);
+ ctEditId=id; ctPrizes=(c.prizes||[]).map(p=>[p[0],p[1]]); ctSelected=(c.participantsList||[]).slice();
  document.getElementById('ctFormT').textContent='Изменить конкурс';
  document.getElementById('ctfName').value=c.n||'';
  document.getElementById('ctfOffer').value=c.of||'';
@@ -2451,8 +2506,11 @@ function openContestEdit(id){
  document.getElementById('ctfFrom').value=c.periodStart||'';
  document.getElementById('ctfTo').value=c.periodEnd||'';
  document.getElementById('ctfFund').value=(c.fund==='—'?'':c.fund)||'';
+ document.getElementById('ctfFundAmount').value=c.fundAmount||'';
+ document.getElementById('ctfDistribution').value=c.distribution==='proportional'?'proportional':'ranked';
+ document.getElementById('ctfParticipants').value=c.participants||'all';
  document.getElementById('ctfDesc').value=c.d||'';
- ctDrawPrizes();
+ ctToggleDistribution(); ctToggleParticipants(); ctDrawPrizes();
  document.getElementById('ovContest').classList.add('on');
 }
 function closeContest(){ document.getElementById('ovContest').classList.remove('on'); }
@@ -2463,11 +2521,19 @@ function ctSave(){
  const periodStart=document.getElementById('ctfFrom').value;
  const periodEnd=document.getElementById('ctfTo').value;
  const fund=document.getElementById('ctfFund').value.trim();
+ const fundAmount=+document.getElementById('ctfFundAmount').value||0;
+ const distribution=document.getElementById('ctfDistribution').value;
+ const participants=document.getElementById('ctfParticipants').value;
  const description=document.getElementById('ctfDesc').value.trim();
  const prizes=ctPrizes.filter(p=>p[0]&&p[0].trim()&&p[1]&&p[1].trim());
  if(!name){ t('Укажите название конкурса'); return; }
  if(!periodStart||!periodEnd){ t('Укажите период конкурса'); return; }
- const body={name,offerKey:offerKey||null,metric,periodStart,periodEnd,fund,description,prizes};
+ if(distribution==='proportional'&&!fundAmount){ t('Укажите размер фонда числом'); return; }
+ if(participants==='selected'&&!ctSelected.length){ t('Выберите хотя бы одного участника'); return; }
+ const body={
+  name,offerKey:offerKey||null,metric,periodStart,periodEnd,fund,description,prizes,
+  distribution,fundAmount,participants,participantsList:ctSelected,
+ };
  const url=ctEditId?('/api/contests/'+ctEditId):'/api/contests';
  const method=ctEditId?'PATCH':'POST';
  fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
@@ -2493,24 +2559,46 @@ function ctDelete(id){
   })
   .catch(()=>t('Не удалось удалить конкурс'));
 }
+let ctOpenId=null;
 function ctOpen(id){
- const c=CONTESTS.find(x=>x.id===id);
+ const c=CONTESTS.find(x=>x.id===id); if(!c) return;
+ ctOpenId=id;
  document.getElementById('ctList').style.display='none';
  document.getElementById('ctDetail').style.display='block';
  document.getElementById('ctdName').textContent=c.n;
  document.getElementById('ctdSub').textContent=c.of+' · '+c.period+' · осталось '+c.left;
+ // opt_in: пока не нажал «Участвовать» — ролики в зачёт не идут (участников
+ // список пуст для меня), показываем кнопку вместо позиции в рейтинге.
+ const joined=!(c.participants==='opt_in')||(c.participantsList||[]).includes(MYNICK);
+ document.getElementById('ctdJoinBtn').style.display=(c.participants==='opt_in'&&!joined&&c.st==='live')?'':'none';
  document.getElementById('ctdCards').innerHTML=
   card('violet','ti-trophy','hi',c.fund,'','Призовой фонд')+
   card('blue','ti-users','',c.people,'','Участников')+
-  card('green','ti-medal','hi',c.my?c.my.pos+' место':'—',c.my?c.my.val:'','Твоя позиция');
+  card('green','ti-medal','hi',c.my?c.my.pos+' место':'—',c.my?c.my.val:(joined?'—':'не участвуешь'),'Твоя позиция');
  document.getElementById('ctdRules').querySelector('div').textContent=c.d;
  document.getElementById('ctdBoard').innerHTML=c.board.map((b,i)=>
   '<div class="lb'+(b[0]==='@marsedzhan'?' me':'')+'"><div class="pos'+(i<3?' t':'')+'">'+(i+1)+'</div>'+
   '<div class="nm">'+escHtml(displayName(b[0]))+(b[0]==='@marsedzhan'?' <span class="tag v" style="margin-left:6px;">это ты</span>':'')+'</div>'+
   '<div class="val">'+b[1]+'</div></div>').join('');
- document.getElementById('ctdPrizes').innerHTML=c.prizes.map(p=>
+ // Пропорциональный дележ не использует места-призы — там нечего показывать
+ // в блоке «Призовой фонд» (сама сумма уже видна карточкой сверху и в
+ // строке рейтинга каждого участника).
+ const hasPrizes=Array.isArray(c.prizes)&&c.prizes.length>0;
+ document.getElementById('ctdPrizesBox').style.display=hasPrizes?'':'none';
+ document.getElementById('ctdPrizes').innerHTML=(c.prizes||[]).map(p=>
   '<div class="prz"><span>'+p[0]+'</span><b>'+p[1]+'</b></div>').join('');
  window.scrollTo(0,0);
+}
+function ctJoin(){
+ if(!ctOpenId) return;
+ fetch('/api/contests/'+ctOpenId+'/join',{method:'POST'})
+  .then(r=>r.json().then(d=>({ok:r.ok,d})))
+  .then(({ok,d})=>{
+   if(!ok){ t(d.error||'Не удалось присоединиться к конкурсу'); return; }
+   CONTESTS=d.contests; drawContests(); ctOpen(ctOpenId);
+   t('Ты участвуешь в конкурсе');
+  })
+  .catch(()=>t('Не удалось присоединиться к конкурсу'));
 }
 function ctBack(){
  document.getElementById('ctDetail').style.display='none';
