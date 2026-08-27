@@ -410,15 +410,31 @@ function contestLeftLabel(c, st) {
   const days = Math.max(0, Math.ceil((new Date(c.periodEnd + 'T23:59:59').getTime() - now) / 86400000));
   return days <= 0 ? 'последний день' : days + ' ' + ruDays(days);
 }
-function computeContestBoard(c) {
-  if (!c.metric || (!c.periodStart && !c.periodEnd)) return c; // старый статичный конкурс — не трогаем
+// Общая агрегация фактов (DONE) под конкурс — вынесена из computeContestBoard
+// отдельной функцией, т.к. теперь её вызывает ещё и finalizeContest для
+// proportional-дележа: там нужны ВСЕ участники с их сырыми значениями
+// метрики (доля фонда положена каждому, а не только топ-10 из витрины
+// board), а не отформатированные строки топ-10.
+//
+// participants — тот же фильтр, что и раньше отсутствовал: раньше в конкурс
+// автоматически попадал любой, у кого есть подходящие ролики. Теперь, если
+// у конкурса participants='selected'|'opt_in', считаем только тех, кто есть
+// в c.participantsList (список редактирует админ для selected, или
+// пополняется через POST /contests/:id/join для opt_in). Для 'all' (или
+// когда поля participants вообще нет — старые демо-конкурсы) — фильтра нет,
+// поведение не отличается от того, что было всегда.
+function aggregateContestEntries(c) {
+  if (!c.metric || (!c.periodStart && !c.periodEnd)) return null; // старый статичный конкурс — не считаем
   const start = c.periodStart ? new Date(c.periodStart).getTime() : null;
   const end = c.periodEnd ? new Date(c.periodEnd + 'T23:59:59').getTime() : null;
+  const restricted = c.participants === 'selected' || c.participants === 'opt_in';
+  const allowedSet = restricted ? new Set(c.participantsList || []) : null;
   const entries = DONE.filter((d) => {
     if (typeof d.ts !== 'number') return false;
     if (c.of && d.of !== c.of) return false;
     if (start !== null && d.ts < start) return false;
     if (end !== null && d.ts > end) return false;
+    if (allowedSet && !allowedSet.has(d.c)) return false;
     return true;
   });
   const byCreator = {};
@@ -433,19 +449,49 @@ function computeContestBoard(c) {
   const ranked = Object.keys(byCreator)
     .map((nick) => ({ nick, value: byCreator[nick][c.metric] }))
     .sort((a, b) => b.value - a.value);
-  c.board = ranked.slice(0, 10).map((r) => [r.nick, fmtMetricValue(c.metric, r.value)]);
-  c.people = ranked.length;
+  const totalMetric = ranked.reduce((s, r) => s + r.value, 0);
+  return { ranked, totalMetric };
+}
+
+function computeContestBoard(c) {
+  const agg = aggregateContestEntries(c);
+  if (!agg) return c; // старый статичный конкурс — не трогаем
+  const { ranked, totalMetric } = agg;
+  c.totalMetric = totalMetric;
+  const distribution = c.distribution === 'proportional' ? 'proportional' : 'ranked'; // по умолчанию — как раньше
   const myIdx = ranked.findIndex((r) => r.nick === MYNICK);
-  if (myIdx === -1) {
-    c.my = null;
-  } else {
-    const mine = ranked[myIdx];
-    const above = ranked[myIdx - 1];
-    c.my = {
-      pos: myIdx + 1,
-      val: fmtMetricValue(c.metric, mine.value),
-      next: above ? ('до ' + myIdx + ' места — ' + fmtMetricValue(c.metric, above.value - mine.value)) : 'ты на первом месте!',
+
+  if (distribution === 'proportional') {
+    // Дележ пропорционально доле метрики (см. rasshirenie_konkursov.md):
+    // моя доля = моя метрика / сумма метрики всех участников. fundAmount —
+    // числовое поле специально под этот расчёт (c.fund — текст для витрины,
+    // делить на него нельзя, см. ниже про синхронизацию этих двух полей).
+    const fundAmount = Number(c.fundAmount) || 0;
+    const shareRow = (r) => {
+      const share = totalMetric > 0 ? r.value / totalMetric : 0;
+      const amount = Math.round(share * fundAmount);
+      return (share * 100).toFixed(1).replace('.', ',') + '% · ' + amount.toLocaleString('ru-RU') + ' ₽'
+        + (c.st === 'ended' ? '' : ' предварительно');
     };
+    c.board = ranked.slice(0, 10).map((r) => [r.nick, shareRow(r)]);
+    c.people = ranked.length;
+    c.my = myIdx === -1 ? null : { pos: myIdx + 1, val: fmtMetricValue(c.metric, ranked[myIdx].value), next: shareRow(ranked[myIdx]) };
+  } else {
+    // ranked — прежняя логика, один в один, ничего не меняем для
+    // существующих конкурсов (у них нет distribution='proportional').
+    c.board = ranked.slice(0, 10).map((r) => [r.nick, fmtMetricValue(c.metric, r.value)]);
+    c.people = ranked.length;
+    if (myIdx === -1) {
+      c.my = null;
+    } else {
+      const mine = ranked[myIdx];
+      const above = ranked[myIdx - 1];
+      c.my = {
+        pos: myIdx + 1,
+        val: fmtMetricValue(c.metric, mine.value),
+        next: above ? ('до ' + myIdx + ' места — ' + fmtMetricValue(c.metric, above.value - mine.value)) : 'ты на первом месте!',
+      };
+    }
   }
   c.lastComputedAt = Date.now();
   return c;
@@ -511,6 +557,41 @@ function parsePrizeTier(label, amountText) {
 function finalizeContest(c) {
   if (c.finalized) return;
   if (c.st !== 'ended') return;
+
+  if (c.distribution === 'proportional') {
+    // Дележ фонда пропорционально доле — пересчитываем агрегацию сами
+    // (не переиспользуем c.board: там только топ-10 для витрины, а долю
+    // фонда получает КАЖДЫЙ участник с ненулевой метрикой, не только
+    // видимые в топе). recomputeContests зовёт computeContestBoard раньше
+    // finalizeContest в этом же тике, но finalizeContest всё равно не
+    // полагается на этот порядок — она самодостаточна.
+    const agg = aggregateContestEntries(c);
+    const fundAmount = Number(c.fundAmount) || 0;
+    if (!agg || !agg.ranked.length || !agg.totalMetric || !fundAmount) { c.finalized = true; return; }
+    agg.ranked.forEach((r) => {
+      const share = r.value / agg.totalMetric;
+      const sum = Math.round(share * fundAmount);
+      if (!sum) return;
+      const entry = {
+        id: accrualAutoId++, type: 'contest', creator: r.nick, contestId: c.id, contestName: c.n,
+        place: null, sum, text: 'Конкурс «' + c.n + '» — доля фонда ' + (share * 100).toFixed(1).replace('.', ',') + '%',
+        d: 'сегодня', createdAt: Date.now(), claimed: false, claimedAt: null,
+      };
+      ACCRUALS = [entry, ...ACCRUALS];
+      if (r.nick === MYNICK) {
+        NOTIF = [{
+          t: 'cup', ti: 'Фонд закрыт!',
+          tx: 'Конкурс «' + c.n + '» — твоя доля ' + (share * 100).toFixed(1).replace('.', ',') + '%, начислено ' + sum.toLocaleString('ru-RU') + ' ₽. Начисление ждёт в личном кабинете.',
+          tm: 'только что', n: 1,
+        }, ...NOTIF];
+      }
+    });
+    c.finalized = true;
+    c.finalizedAt = Date.now();
+    return;
+  }
+
+  // ranked — прежняя логика, без изменений.
   if (!Array.isArray(c.prizes) || !Array.isArray(c.board) || !c.board.length) { c.finalized = true; return; }
   const tiers = c.prizes.map((p) => parsePrizeTier(p[0], p[1])).filter(Boolean);
   c.board.forEach((row, idx) => {
